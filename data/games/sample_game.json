@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "title": "잃어버린 왕관",
+    "version": 1,
+    "description": "마을을 위협하는 던전의 보스를 쓰러뜨리고 왕관을 되찾는 짧은 2D 도트 스토리 게임"
+  },
+  "start": {
+    "area": "village",
+    "items": [],
+    "flags": []
+  },
+  "items": [
+    {"id": "torch", "name": "횃불", "description": "어두운 동굴을 밝혀 준다"},
+    {"id": "golden_key", "name": "황금 열쇠", "description": "마지막 던전의 문을 여는 열쇠"},
+    {"id": "iron_ore", "name": "철광석", "description": "동굴 깊은 곳에서 캐낸 광석"},
+    {"id": "legend_sword", "name": "전설의 검", "description": "대장장이가 벼려 낸 보스를 벨 수 있는 검"}
+  ],
+  "areas": [
+    {"id": "village", "name": "마을", "connections": ["forest"], "requires_items": [], "requires_flags": []},
+    {"id": "forest", "name": "숲", "connections": ["village", "cave"], "requires_items": [], "requires_flags": []},
+    {"id": "cave", "name": "동굴", "connections": ["forest", "final_dungeon"], "requires_items": ["torch"], "requires_flags": []},
+    {"id": "final_dungeon", "name": "마지막 던전", "connections": ["cave"], "requires_items": ["golden_key"], "requires_flags": []}
+  ],
+  "npcs": [
+    {"id": "chief", "name": "촌장", "area": "village", "dialogue": ["숲에 사는 사냥꾼을 만나 보게. 횃불이 필요할 걸세."]},
+    {"id": "hunter", "name": "사냥꾼", "area": "forest", "dialogue": ["동굴 안쪽까지 다녀오면 황금 열쇠를 주지."]},
+    {"id": "smith", "name": "대장장이", "area": "village", "dialogue": ["철광석을 가져오면 전설의 검을 만들어 주겠네."]}
+  ],
+  "quests": [
+    {
+      "id": "q1", "name": "숲으로 가는 길", "giver": "chief",
+      "requires_quests": [], "complete_area": "forest",
+      "requires_items": [], "consumes_items": [],
+      "reward_items": ["torch"], "reward_flags": []
+    },
+    {
+      "id": "q2", "name": "사냥꾼의 시험", "giver": "hunter",
+      "requires_quests": ["q1"], "complete_area": "cave",
+      "requires_items": [], "consumes_items": [],
+      "reward_items": ["golden_key"], "reward_flags": []
+    },
+    {
+      "id": "q3", "name": "대장장이의 부탁", "giver": "smith",
+      "requires_quests": [], "complete_area": "village",
+      "requires_items": ["iron_ore"], "consumes_items": ["iron_ore"],
+      "reward_items": ["legend_sword"], "reward_flags": []
+    }
+  ],
+  "events": [
+    {
+      "id": "mine_ore", "name": "철광석 채굴", "area": "cave",
+      "requires_items": [], "requires_flags": [], "requires_quests": [],
+      "gives_items": ["iron_ore"], "sets_flags": []
+    },
+    {
+      "id": "boss_battle", "name": "보스 처치", "area": "final_dungeon",
+      "requires_items": ["legend_sword"], "requires_flags": [], "requires_quests": [],
+      "gives_items": [], "sets_flags": ["boss_defeated"]
+    }
+  ],
+  "ending": {
+    "name": "왕관을 되찾다",
+    "requires_items": [],
+    "requires_flags": ["boss_defeated"]
+  }
+}

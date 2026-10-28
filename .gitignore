@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+data/llm_calls.db
+data/health_*.json
+data/recordings/*.json
+data/games/edited_game.json
+eval/results/*
+!eval/results/.gitkeep
+.claude/*
+!.claude/commands/
