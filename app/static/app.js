@@ -9,9 +9,9 @@ const PRESETS = [
 ];
 const SRC = { live: "실시간", mock: "모의 응답", replay: "저장된 결과", template: "규칙 설명" };
 const ERR = {
-  timeout: "응답 시간 초과", server_error: "GPU 서버 오류", rate_limited: "요청이 몰려 거절됨(429)",
+  timeout: "응답 시간 초과", server_error: "AI 서버 오류", rate_limited: "요청이 몰려 거절됨(429)",
   json_error: "AI 답이 정해진 형식이 아님", config_error: ".env 설정 오류", no_recording: "저장된 결과 없음",
-  storage_error: "저장소 연결 실패",
+  storage_error: "저장소 연결 실패", refusal: "AI가 요청을 거절함",
 };
 const KIND = { area: "지역", quest: "퀘스트", item: "아이템", event: "이벤트", flag: "조건", ending: "엔딩" };
 
@@ -34,7 +34,7 @@ async function init() {
   const st = await api("/api/status");
   const badge = $("modeBadge");
   badge.className = "badge " + st.mode;
-  badge.textContent = { live: "실시간 GPU 연결", mock: "모의 모드 (발표 숫자로 쓰지 않음)", replay: "저장된 결과 재생" }[st.mode] || st.mode;
+  badge.textContent = { live: st.provider === "anthropic" ? "실시간 Claude 연결" : "실시간 GPU 연결", mock: "모의 모드 (발표 숫자로 쓰지 않음)", replay: "저장된 결과 재생" }[st.mode] || st.mode;
   const store = $("storeText");
   if (store) {  // 예전 index.html이 캐시에 남아 있어도 아래 GPU 상태 표시가 멈추지 않게
     store.textContent = { supabase: "기록: Supabase", local: "기록: 이 PC", none: "기록 저장 안 됨" }[st.store] || "";

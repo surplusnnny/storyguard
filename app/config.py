@@ -33,6 +33,11 @@ def mode() -> str:
     return get("LLM_MODE", "mock").lower()
 
 
+def provider() -> str:
+    """vllm: GPU 서버(OpenAI 호환) / anthropic: Claude API. 기본은 vllm(예전 동작 그대로)."""
+    return "anthropic" if get("LLM_PROVIDER", "vllm").lower() == "anthropic" else "vllm"
+
+
 def models() -> list[str]:
     return [m.strip() for m in get("LLM_MODELS", "").split(",") if m.strip()]
 

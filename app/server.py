@@ -61,8 +61,9 @@ def index():
 @app.get("/api/status")
 def status():
     # 공개 사이트(Vercel)에서는 GPU 서버 주소를 내보내지 않는다
-    show_url = config.mode() == "live" and not config.on_vercel()
-    return {"mode": config.mode(), "models": config.models(), "base_url": config.base_url() if show_url else "",
+    show_url = config.mode() == "live" and config.provider() == "vllm" and not config.on_vercel()
+    return {"mode": config.mode(), "provider": config.provider(), "models": config.models(),
+            "base_url": config.base_url() if show_url else "",
             "replay_fallback": config.replay_fallback(),
             "store": storage.backend(), "recordings": storage.count_recordings()}
 
@@ -72,6 +73,7 @@ def health():
     """GPU 서버 연결 확인(화면 상단 배지용). live 모드가 아니면 확인하지 않는다."""
     if config.mode() != "live":
         return {"ok": None, "message": f"{config.mode()} 모드라 GPU 서버를 확인하지 않음"}
+    target = "Claude API" if config.provider() == "anthropic" else "GPU 서버"
     try:
         ids = llm_client.list_models()
         missing = [m for m in config.models() if m not in ids]
@@ -79,8 +81,8 @@ def health():
                 "message": "연결됨" if not missing else f"서버에 없는 모델: {', '.join(missing)}"}
     except Exception as exc:  # noqa: BLE001
         if config.on_vercel():  # 예외 문구에 서버 주소가 들어 있을 수 있어 공개 사이트에서는 종류만 보인다
-            return {"ok": False, "message": f"GPU 서버에 연결하지 못함 ({type(exc).__name__})"}
-        return {"ok": False, "message": f"GPU 서버에 연결하지 못함: {exc}"}
+            return {"ok": False, "message": f"{target}에 연결하지 못함 ({type(exc).__name__})"}
+        return {"ok": False, "message": f"{target}에 연결하지 못함: {exc}"}
 
 
 @app.get("/api/games")
