@@ -1,4 +1,4 @@
-"""GPU 서버의 vLLM(OpenAI 호환 API)을 부르는 클라이언트.
+"""LLM 클라이언트. GPU 서버의 vLLM(OpenAI 호환 API) 또는 Claude API(LLM_PROVIDER=anthropic)를 부른다.
 
 - 모든 호출의 모델, 응답 시간, 토큰 수, 성공 여부를 기록한다(발표 숫자의 근거).
   어디에 쓰는지는 app/storage.py가 정한다: Supabase(설정 있을 때) 또는 SQLite(data/llm_calls.db).
@@ -82,6 +82,40 @@ def _save_recording(key: str, prompt_name: str, r: LLMResult) -> None:
 
 # ------------------------------------------------------------------ 실시간 호출
 def _post(model: str, messages: list[dict]) -> tuple[str, dict]:
+    if config.provider() == "anthropic":
+        return _post_anthropic(model, messages)
+    return _post_vllm(model, messages)
+
+
+ANTHROPIC_URL = "https://api.anthropic.com"  # 환경의 ANTHROPIC_BASE_URL(다른 서버일 수 있음)을 따르지 않게 고정
+
+
+def _anthropic_client():
+    """시험에서 가짜로 바꿔 끼우는 지점. 재시도는 call_json이 하므로 SDK 재시도는 끈다.
+    키는 ANTHROPIC_API_KEY만 쓴다. 서버 주소를 고정해 키가 다른 서버로 가지 않게 하고,
+    키가 비어 있으면 환경의 ANTHROPIC_AUTH_TOKEN 같은 다른 자격으로 대신 부르지 않고 설정 오류로 끝낸다."""
+    import anthropic
+    key = config.get("ANTHROPIC_API_KEY")
+    if not key:
+        raise _ConfigError(".env의 ANTHROPIC_API_KEY가 비어 있습니다.")
+    return anthropic.Anthropic(api_key=key, base_url=ANTHROPIC_URL, timeout=config.timeout(), max_retries=0)
+
+
+def _post_anthropic(model: str, messages: list[dict]) -> tuple[str, dict]:
+    # system 메시지는 별도 인자로 보낸다. temperature는 보내지 않는다(Haiku 5.5는 기본값 외 값이면 400).
+    system = (chr(10) * 2).join(m["content"] for m in messages if m["role"] == "system")
+    chat = [m for m in messages if m["role"] != "system"]
+    resp = _anthropic_client().messages.create(
+        model=model, max_tokens=config.max_tokens(), system=system, messages=chat,
+        output_config={"effort": "low"})  # 생각이 기본으로 켜져 있어 낮춰 비용·시간을 줄인다
+    if resp.stop_reason == "refusal":
+        raise _Refused("모델이 이 요청에 답하기를 거절함")
+    text = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
+    usage = {"prompt_tokens": resp.usage.input_tokens, "completion_tokens": resp.usage.output_tokens}
+    return text, usage
+
+
+def _post_vllm(model: str, messages: list[dict]) -> tuple[str, dict]:
     import httpx
     body: dict[str, Any] = {"model": model, "messages": messages, "temperature": 0.2,
                             "max_tokens": config.max_tokens()}
@@ -89,7 +123,7 @@ def _post(model: str, messages: list[dict]) -> tuple[str, dict]:
         body["response_format"] = {"type": "json_object"}
     headers = {"Authorization": f"Bearer {config.api_key()}"}
     with httpx.Client(timeout=config.timeout()) as client:
-        resp = client.post(f"{config.base_url()}/v1/chat/completions", json=body, headers=headers)
+        resp = client.post(f"{config.api_root()}/chat/completions", json=body, headers=headers)
     if resp.status_code >= 400:
         raise _HTTPError(resp.status_code, resp.text[:500])
     j = resp.json()
@@ -97,6 +131,14 @@ def _post(model: str, messages: list[dict]) -> tuple[str, dict]:
     if not choices:
         raise _HTTPError(resp.status_code, "응답에 choices가 없음: " + json.dumps(j, ensure_ascii=False)[:300])
     return choices[0]["message"].get("content") or "", j.get("usage") or {}
+
+
+class _Refused(Exception):
+    pass
+
+
+class _ConfigError(Exception):
+    pass
 
 
 class _HTTPError(Exception):
@@ -109,8 +151,14 @@ def _classify(exc: Exception) -> str:
     name = type(exc).__name__.lower()
     if "timeout" in name:
         return "timeout"
+    if isinstance(exc, _Refused):
+        return "refusal"
+    if isinstance(exc, _ConfigError):
+        return "config_error"
     if isinstance(exc, _HTTPError):
         return "rate_limited" if exc.status == 429 else "server_error"
+    if getattr(exc, "status_code", None) == 429:  # anthropic SDK의 RateLimitError
+        return "rate_limited"
     if isinstance(exc, json.JSONDecodeError):
         return "json_error"
     return "server_error"
@@ -204,9 +252,11 @@ def call_json(prompt_name: str, messages: list[dict], context: dict | None = Non
 
 
 def list_models() -> list[str]:
+    if config.provider() == "anthropic":
+        return [m.id for m in _anthropic_client().models.list()]
     import httpx
     with httpx.Client(timeout=config.timeout()) as client:
-        resp = client.get(f"{config.base_url()}/v1/models",
+        resp = client.get(f"{config.api_root()}/models",
                           headers={"Authorization": f"Bearer {config.api_key()}"})
     resp.raise_for_status()
-    return [m["id"] for m in resp.json().get("data", [])]
+    return [m["id"].removeprefix("models/") for m in resp.json().get("data", [])]  # Gemini는 models/ 접두어를 붙임

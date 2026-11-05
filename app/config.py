@@ -33,12 +33,23 @@ def mode() -> str:
     return get("LLM_MODE", "mock").lower()
 
 
+def provider() -> str:
+    """vllm: GPU 서버(OpenAI 호환) / anthropic: Claude API. 기본은 vllm(예전 동작 그대로)."""
+    return "anthropic" if get("LLM_PROVIDER", "vllm").lower() == "anthropic" else "vllm"
+
+
 def models() -> list[str]:
     return [m.strip() for m in get("LLM_MODELS", "").split(",") if m.strip()]
 
 
 def base_url() -> str:
     return get("LLM_BASE_URL", "http://localhost:8000").rstrip("/")
+
+
+def api_root() -> str:
+    """OpenAI 호환 API의 기준 주소. /v1이나 /openai로 끝나면(Gemini 등) /v1을 또 붙이지 않는다."""
+    b = base_url()
+    return b if b.endswith(("/v1", "/openai")) else b + "/v1"
 
 
 def api_key() -> str:
