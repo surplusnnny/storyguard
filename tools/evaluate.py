@@ -191,6 +191,9 @@ def main():
         print("eval/requests.json의 reviewed가 false입니다. --show로 평가 세트를 먼저 확인하고 reviewed를 true로 바꾸세요.")
         sys.exit(2)
 
+    if config.mode() in ("replay", "replay_first"):
+        print(f"LLM_MODE={config.mode()}에서는 평가를 하지 않습니다. 저장된 결과가 섞이면 발표 숫자의 근거가 되지 않습니다(CLAUDE.md 규칙 7). LLM_MODE=live로 바꾸세요.")
+        sys.exit(2)
     mock = config.mode() == "mock"
     game = load_game(ROOT / "data" / "games" / "sample_game.json")
     stamp = time.strftime("%Y%m%d-%H%M%S")

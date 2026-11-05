@@ -56,7 +56,7 @@ button { font: inherit; color: inherit; }
 }
 .badge.live { background: var(--ok); border-color: var(--ok); }
 .badge.mock { background: var(--gold); border-color: var(--gold); color: var(--ink); }
-.badge.replay { background: var(--quest); border-color: var(--quest); }
+.badge.replay, .badge.replay_first { background: var(--quest); border-color: var(--quest); }
 .health { font-size: 14px; color: #C8D6EE; max-width: 340px; }
 .health.bad { color: #FFB4AE; }
 

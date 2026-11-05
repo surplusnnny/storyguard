@@ -189,6 +189,17 @@ def call_json(prompt_name: str, messages: list[dict], context: dict | None = Non
         _log(run_tag, prompt_name, r)
         return r
 
+    if mode == "replay_first":
+        # 저장된 결과가 있으면 그것을 쓴다(같은 요청은 같은 연쇄를 재현). 없으면 아래 실시간 호출로 넘어간다.
+        try:
+            rec = storage.load_recording(key)
+        except storage.StorageError:
+            rec = None  # 저장소를 못 읽으면 없는 것으로 보고 실시간을 시도한다
+        if rec:
+            r = LLMResult(ok=True, data=rec["data"], model=rec.get("model", ""), source="replay")
+            _log(run_tag, prompt_name, r)
+            return r
+
     models = models or config.models()
     if not models:
         r = LLMResult(ok=False, source="live", error_kind="config_error",
