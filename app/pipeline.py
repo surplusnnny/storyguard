@@ -9,7 +9,7 @@ import re
 import time
 from typing import Any
 
-from . import graph, llm_client, prompts
+from . import config, graph, llm_client, prompts
 from .mock_llm import rule_explain
 from .verifier import verify
 
@@ -63,6 +63,18 @@ def _attempt_record(kind: str, r: llm_client.LLMResult, game: dict | None, v: di
         },
         "game": game,
     }
+
+
+def _over_budget(t0: float) -> bool:
+    """요청 하나의 시간 한도(LLM_REQUEST_BUDGET)를 넘었는지. Vercel 함수 최대 시간(300초)을 넘기지 않으려고."""
+    budget = config.request_budget()
+    return budget > 0 and time.perf_counter() - t0 > budget
+
+
+def _budget_record() -> dict:
+    r = llm_client.LLMResult(ok=False, source="", error_kind="budget_exceeded",
+                             error_message=f"요청 시간 한도({config.request_budget():g}초)를 넘어 다시 고치기를 멈췄습니다.")
+    return _attempt_record("repair", r, None, None, note="시간 제한으로 중단")
 
 
 def explain(original: dict, game: dict, v: dict, request: str, run_tag: str = "") -> dict:
@@ -142,6 +154,9 @@ def modify(original: dict, request: str, auto_retry: bool = True, max_retries: i
 
     retries = 0
     while auto_retry and not cur_v["passed"] and retries < max_retries:
+        if _over_budget(t0):
+            attempts.append(_budget_record())
+            break
         retries += 1
         rec2, g2, v2, declared = _repair_once(original, request, cur_game, cur_v, attempts[1:], declared,
                                               intent_paths, first_game, None, run_tag)
@@ -152,7 +167,12 @@ def modify(original: dict, request: str, auto_retry: bool = True, max_retries: i
 
     explanation = None
     if not first_v["passed"]:
-        explanation = explain(original, first_game, first_v, request, run_tag)
+        if _over_budget(t0):  # 한도를 넘었으면 AI 설명 대신 규칙 설명(출처 "규칙 설명")
+            changes = first_v.get("changes", [])
+            explanation = {**rule_explain(first_game, first_v, changes), "source": "template",
+                           "llm_error": "요청 시간 한도를 넘어 AI 설명을 부르지 않음"}
+        else:
+            explanation = explain(original, first_game, first_v, request, run_tag)
     status = "passed" if cur_v["passed"] else "failed"
     res = _result(status, original, cur_game, cur_v, attempts, explanation, request, t0)
     res["first_pass"] = first_v["passed"]

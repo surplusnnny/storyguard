@@ -81,6 +81,11 @@ def supabase_timeout() -> float:
     return float(get("SUPABASE_TIMEOUT", "2"))
 
 
+def request_budget() -> float:
+    """요청 하나(수정→재수정→설명)의 전체 시간 한도(초). 0이면 끔. Vercel Hobby는 함수 최대 300초라 240을 권장."""
+    return float(get("LLM_REQUEST_BUDGET", "0") or 0)
+
+
 def on_vercel() -> bool:
     """Vercel 함수에서 실행 중인지. Vercel은 런타임에 VERCEL=1을 넣는다(Preview 배포에서 확인 예정)."""
     return get("VERCEL", "") == "1"

@@ -1,0 +1,4 @@
+# 로컬 개발·시험·평가용. 배포(Vercel)는 requirements.txt만 설치한다.
+-r requirements.txt
+pytest>=8.0
+matplotlib>=3.8
