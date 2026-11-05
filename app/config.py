@@ -29,7 +29,8 @@ def get(key: str, default: str = "") -> str:
 
 
 def mode() -> str:
-    """live: GPU 서버 호출 / mock: 서버 없이 규칙 기반 모의 응답 / replay: 저장된 결과만 사용"""
+    """live: 실시간 호출 / mock: 서버 없이 규칙 기반 모의 응답 / replay: 저장된 결과만 사용 /
+    replay_first: 저장된 결과가 있으면 쓰고 없으면 실시간 호출(성공하면 저장)"""
     return get("LLM_MODE", "mock").lower()
 
 

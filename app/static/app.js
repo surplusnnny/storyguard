@@ -34,7 +34,7 @@ async function init() {
   const st = await api("/api/status");
   const badge = $("modeBadge");
   badge.className = "badge " + st.mode;
-  badge.textContent = { live: st.provider === "anthropic" ? "실시간 Claude 연결" : "실시간 GPU 연결", mock: "모의 모드 (발표 숫자로 쓰지 않음)", replay: "저장된 결과 재생" }[st.mode] || st.mode;
+  badge.textContent = { live: st.provider === "anthropic" ? "실시간 Claude 연결" : "실시간 GPU 연결", mock: "모의 모드 (발표 숫자로 쓰지 않음)", replay: "저장된 결과 재생", replay_first: "저장된 결과 우선 (없으면 실시간)" }[st.mode] || st.mode;
   const store = $("storeText");
   if (store) {  // 예전 index.html이 캐시에 남아 있어도 아래 GPU 상태 표시가 멈추지 않게
     store.textContent = { supabase: "기록: Supabase", local: "기록: 이 PC", none: "기록 저장 안 됨" }[st.store] || "";
@@ -42,7 +42,7 @@ async function init() {
   }
   api("/api/health").then((h) => {
     const el = $("healthText");
-    if (h.ok === null) { el.textContent = st.mode === "mock" ? "GPU 서버 없이 동작 중" : h.message; return; }
+    if (h.ok === null) { el.textContent = st.mode === "mock" ? "AI 서버 없이 동작 중" : h.message; return; }
     el.textContent = h.ok ? `연결됨: ${st.models.join(", ")}` : h.message;
     el.classList.toggle("bad", !h.ok);
   }).catch(() => {});
