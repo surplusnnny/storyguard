@@ -49,10 +49,14 @@
 | 상대 경로 | `open()`의 상대 경로 기준은 프로젝트 루트 | Python 런타임 |
 | Supabase 키 | `sb_secret_…`는 서버 전용이고 **RLS를 모두 우회**. 브라우저에서 쓰면 401. 키는 `apikey` 헤더로 보냄(`Authorization: Bearer` 아님). 새 키는 JWT가 아님 | [Supabase API Keys](https://supabase.com/docs/guides/api/api-keys) |
 
-**확인하지 못한 것** (Preview 배포에서 확인한다)
-- Vercel 함수 파일시스템이 읽기 전용인지와 `/tmp`의 크기·유지 여부. 조회한 문서에서 문구를 찾지 못했다. 그래서 계획은 "배포 서버에서는 로컬 파일 쓰기를 하지 않는다"로 세운다.
-- `app/server.py`를 자동 감지 진입점으로 쓸 때 `from . import config` 같은 상대 import가 동작하는지. 그래서 루트에 `main.py`를 따로 둔다(Task 2).
-- 런타임에 환경 변수 `VERCEL=1`이 있는지. Task 2의 Preview 배포에서 `/api/status`로 확인한다.
+**배포 후 확인 결과** (2026-11-05 첫 배포 `dpl_2QHJq9yeebBNts5FCKrsgud1tBCY`, https://storyguard.vercel.app)
+- 런타임 `VERCEL=1`: **있음.** `/api/status`가 `"store":"none"`을 돌려줌 (curl 결과)
+- 루트 `main.py` 진입점과 `app` 패키지의 상대 import: **동작함.** `/`, `/api/games`, `/api/game/sample_game` 200 (curl 결과)
+- 정적 파일: `/static/style.css`, `/static/app.js`, Galmuri 글꼴 200 (curl 결과)
+- 파일시스템 쓰기 가능 여부: **확인하지 않았음.** 저장소가 `none`이라 쓰기를 시도하지 않으므로 지금은 필요 없음
+- 시연 6단계: `demo_check.py --url https://storyguard.vercel.app` 모두 성공 (mock 모드)
+- 공개 응답에 `sb_secret_`, `LLM_API_KEY`, 사설 IP 없음 (curl + grep, 0건)
+- 참고: Git 연결 없이 `vercel deploy`로 올린 첫 배포가 Preview가 아니라 **Production**(`storyguard.vercel.app`)으로 올라감 (vercel inspect의 target)
 
 ## 3. Supabase 테이블 초안
 
