@@ -53,6 +53,16 @@ def api_root() -> str:
     return b if b.endswith(("/v1", "/openai")) else b + "/v1"
 
 
+def is_openai() -> bool:
+    """LLM_BASE_URL이 OpenAI(api.openai.com)인지. 그러면 gpt-5 계열에 맞는 요청 형식을 쓴다."""
+    return "api.openai.com" in base_url()
+
+
+def reasoning_effort() -> str:
+    """OpenAI 추론 모델의 생각 양(minimal/low/medium/high). 낮을수록 빠르고 싸다."""
+    return get("LLM_REASONING_EFFORT", "low")
+
+
 def api_key() -> str:
     return get("LLM_API_KEY", "EMPTY")
 

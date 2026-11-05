@@ -117,8 +117,13 @@ def _post_anthropic(model: str, messages: list[dict]) -> tuple[str, dict]:
 
 def _post_vllm(model: str, messages: list[dict]) -> tuple[str, dict]:
     import httpx
-    body: dict[str, Any] = {"model": model, "messages": messages, "temperature": 0.2,
-                            "max_tokens": config.max_tokens()}
+    if config.is_openai():
+        # gpt-5 계열은 temperature 기본값 외 값과 max_tokens를 받지 않는다. 추론 토큰이 한도를 같이 쓴다.
+        body: dict[str, Any] = {"model": model, "messages": messages,
+                                "max_completion_tokens": max(config.max_tokens(), 8000),
+                                "reasoning_effort": config.reasoning_effort()}
+    else:
+        body = {"model": model, "messages": messages, "temperature": 0.2, "max_tokens": config.max_tokens()}
     if config.json_mode():
         body["response_format"] = {"type": "json_object"}
     headers = {"Authorization": f"Bearer {config.api_key()}"}
