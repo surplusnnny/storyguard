@@ -46,6 +46,12 @@ def base_url() -> str:
     return get("LLM_BASE_URL", "http://localhost:8000").rstrip("/")
 
 
+def api_root() -> str:
+    """OpenAI 호환 API의 기준 주소. /v1이나 /openai로 끝나면(Gemini 등) /v1을 또 붙이지 않는다."""
+    b = base_url()
+    return b if b.endswith(("/v1", "/openai")) else b + "/v1"
+
+
 def api_key() -> str:
     return get("LLM_API_KEY", "EMPTY")
 

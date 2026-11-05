@@ -105,3 +105,14 @@ def test_missing_api_key_is_config_error_without_using_other_credentials(anthrop
     monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "gateway-token")
     r = llm_client.call_json("modify", MSGS)
     assert r.ok is False and r.error_kind == "config_error"
+
+
+@pytest.mark.parametrize("base,expected", [
+    ("http://gpu:8000", "http://gpu:8000/v1"),
+    ("http://gpu:8000/", "http://gpu:8000/v1"),
+    ("https://x.example/v1", "https://x.example/v1"),
+    ("https://generativelanguage.googleapis.com/v1beta/openai", "https://generativelanguage.googleapis.com/v1beta/openai"),
+])
+def test_api_root_does_not_double_v1(monkeypatch, base, expected):
+    monkeypatch.setenv("LLM_BASE_URL", base)
+    assert config.api_root() == expected

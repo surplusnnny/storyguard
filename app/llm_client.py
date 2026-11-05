@@ -123,7 +123,7 @@ def _post_vllm(model: str, messages: list[dict]) -> tuple[str, dict]:
         body["response_format"] = {"type": "json_object"}
     headers = {"Authorization": f"Bearer {config.api_key()}"}
     with httpx.Client(timeout=config.timeout()) as client:
-        resp = client.post(f"{config.base_url()}/v1/chat/completions", json=body, headers=headers)
+        resp = client.post(f"{config.api_root()}/chat/completions", json=body, headers=headers)
     if resp.status_code >= 400:
         raise _HTTPError(resp.status_code, resp.text[:500])
     j = resp.json()
@@ -256,7 +256,7 @@ def list_models() -> list[str]:
         return [m.id for m in _anthropic_client().models.list()]
     import httpx
     with httpx.Client(timeout=config.timeout()) as client:
-        resp = client.get(f"{config.base_url()}/v1/models",
+        resp = client.get(f"{config.api_root()}/models",
                           headers={"Authorization": f"Bearer {config.api_key()}"})
     resp.raise_for_status()
     return [m["id"] for m in resp.json().get("data", [])]
