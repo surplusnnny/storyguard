@@ -33,5 +33,14 @@ AI 기반 1인 인디게임 유지보수 및 스토리 검증 에이전트. NEXT
 12. 세션을 마칠 때마다 완료한 단계, 결정과 그 이유, 버린 대안, 알려진 문제, 다음에 할 일을 `실행기록.md`에 추가한다.
 
 ## 시험
-- `python -m pytest -q` 35개가 모두 통과해야 한다. 가짜 vLLM 서버를 자동으로 띄워 live 경로도 시험한다.
+- `python -m pytest -q` 50개가 모두 통과해야 한다. 가짜 vLLM 서버를 자동으로 띄워 live 경로도 시험한다.
 - 시험이 통과해도 화면은 브라우저에서 직접 눌러 확인한다.
+
+## 배포
+- 코드: https://github.com/surplusnnny/storyguard (공개 저장소). 공개 사이트: https://storyguard.vercel.app (Vercel 프로젝트 0510-a7b9/storyguard, 함수 지역 icn1)
+- 배포 방법: master에 push하면 Vercel이 Production으로 자동 배포한다. 수동은 `vercel.cmd deploy --prod`(PowerShell은 vercel.ps1이 막혀 .cmd를 쓴다).
+- 저장소: Supabase 프로젝트 storyguard(ref zycgmmedpkwyupjgpkix). 테이블 llm_calls, llm_recordings, saved_games(RLS 켬, 정책 없음). DB 변경은 `supabase/migrations`에 SQL을 두고 `supabase db push`로만 한다. `db reset` 금지.
+- Vercel Production 환경 변수 이름: LLM_MODE, LLM_REQUEST_BUDGET, SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_TIMEOUT. 값은 문서·채팅·로그에 적지 않는다. 확인은 `vercel.cmd env ls production`.
+- 공개 사이트 AI 모드는 지금 mock이다. replay로 바꾸려면 노트북에서 live로 성공한 결과가 Supabase llm_recordings에 쌓여 있어야 한다.
+- 공개 사이트 점검: `python tools/demo_check.py --url https://storyguard.vercel.app` (실행할 때마다 Supabase llm_calls에 env=vercel 행이 6건 늘어난다).
+- 자세한 계획과 결정: docs/DEPLOY-PLAN.md
