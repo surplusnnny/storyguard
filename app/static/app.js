@@ -11,6 +11,7 @@ const SRC = { live: "실시간", mock: "모의 응답", replay: "저장된 결�
 const ERR = {
   timeout: "응답 시간 초과", server_error: "GPU 서버 오류", rate_limited: "요청이 몰려 거절됨(429)",
   json_error: "AI 답이 정해진 형식이 아님", config_error: ".env 설정 오류", no_recording: "저장된 결과 없음",
+  storage_error: "저장소 연결 실패",
 };
 const KIND = { area: "지역", quest: "퀘스트", item: "아이템", event: "이벤트", flag: "조건", ending: "엔딩" };
 
@@ -295,7 +296,7 @@ $("resetBtn").onclick = async () => {
 };
 $("saveBtn").onclick = async () => {
   const r = await api("/api/save_game", { game: S.base });
-  alert(`${r.saved}에 저장했습니다.`);
+  alert(r.message);
 };
 $("playReset").onclick = () => startPlay(S.playGame, $("playSource").textContent);
 

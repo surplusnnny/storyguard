@@ -4,7 +4,6 @@
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -12,7 +11,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, graph, llm_client, pipeline
+from . import config, graph, llm_client, pipeline, storage
 from .engine import Game, State
 from .verifier import load_game, verify
 
@@ -63,7 +62,7 @@ def index():
 def status():
     return {"mode": config.mode(), "models": config.models(), "base_url": config.base_url() if config.mode() == "live" else "",
             "replay_fallback": config.replay_fallback(),
-            "recordings": len(list(config.RECORDINGS.glob("*.json"))) if config.RECORDINGS.exists() else 0}
+            "store": storage.backend(), "recordings": storage.count_recordings()}
 
 
 @app.get("/api/health")
@@ -146,7 +145,5 @@ def api_play(b: PlayBody):
 
 @app.post("/api/save_game")
 def save_game(b: GameBody):
-    """수정된 게임을 data/games/edited_game.json으로 저장(시연 뒤 확인용)."""
-    p = GAMES / "edited_game.json"
-    p.write_text(json.dumps(b.game, ensure_ascii=False, indent=2), encoding="utf-8")
-    return {"saved": str(p.relative_to(config.ROOT))}
+    """수정된 게임 저장(시연 뒤 확인용). 로컬은 data/games/edited_game.json, 배포는 Supabase saved_games."""
+    return storage.save_game(b.game)

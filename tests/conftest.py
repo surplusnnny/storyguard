@@ -19,6 +19,9 @@ def isolated_data(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "RECORDINGS", tmp_path / "recordings")
     monkeypatch.setattr(config, "DB_PATH", tmp_path / "calls.db")
     monkeypatch.setattr(config, "DATA", tmp_path)
+    # .env에 실제 Supabase 키가 있어도 시험이 진짜 DB에 쓰지 않게 한다. Vercel 표시도 끈다.
+    for key in ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "VERCEL", "LLM_REQUEST_BUDGET"):
+        monkeypatch.delenv(key, raising=False)
     yield
 
 

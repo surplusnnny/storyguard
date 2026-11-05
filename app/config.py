@@ -64,3 +64,23 @@ def json_mode() -> bool:
 
 def max_tokens() -> int:
     return int(get("LLM_MAX_TOKENS", "4096"))
+
+
+# ------------------------------------------------------------------ 기록 저장소 (app/storage.py)
+def supabase_url() -> str:
+    """Supabase 프로젝트 주소. 비어 있으면 Supabase를 쓰지 않는다."""
+    return get("SUPABASE_URL", "").rstrip("/")
+
+
+def supabase_secret_key() -> str:
+    """서버 전용 secret 키(sb_secret_...). 브라우저 코드(app/static)에는 절대 넣지 않는다."""
+    return get("SUPABASE_SECRET_KEY", "")
+
+
+def supabase_timeout() -> float:
+    return float(get("SUPABASE_TIMEOUT", "2"))
+
+
+def on_vercel() -> bool:
+    """Vercel 함수에서 실행 중인지. Vercel은 런타임에 VERCEL=1을 넣는다(Preview 배포에서 확인 예정)."""
+    return get("VERCEL", "") == "1"
