@@ -20,8 +20,10 @@ def isolated_data(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DB_PATH", tmp_path / "calls.db")
     monkeypatch.setattr(config, "DATA", tmp_path)
     # .env에 실제 Supabase 키가 있어도 시험이 진짜 DB에 쓰지 않게 한다. Vercel 표시도 끈다.
-    for key in ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "VERCEL", "LLM_REQUEST_BUDGET"):
+    for key in ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "VERCEL", "LLM_REQUEST_BUDGET", "ANTHROPIC_API_KEY"):
         monkeypatch.delenv(key, raising=False)
+    # .env에 Claude 설정이 있어도 시험은 기본(vllm) 경로를 쓰고 실제 키를 만지지 않는다
+    monkeypatch.setenv("LLM_PROVIDER", "vllm")
     yield
 
 

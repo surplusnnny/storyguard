@@ -87,11 +87,18 @@ def _post(model: str, messages: list[dict]) -> tuple[str, dict]:
     return _post_vllm(model, messages)
 
 
+ANTHROPIC_URL = "https://api.anthropic.com"  # 환경의 ANTHROPIC_BASE_URL(다른 서버일 수 있음)을 따르지 않게 고정
+
+
 def _anthropic_client():
-    """시험에서 가짜로 바꿔 끼우는 지점. 재시도는 call_json이 하므로 SDK 재시도는 끈다."""
+    """시험에서 가짜로 바꿔 끼우는 지점. 재시도는 call_json이 하므로 SDK 재시도는 끈다.
+    키는 ANTHROPIC_API_KEY만 쓴다. 서버 주소를 고정해 키가 다른 서버로 가지 않게 하고,
+    키가 비어 있으면 환경의 ANTHROPIC_AUTH_TOKEN 같은 다른 자격으로 대신 부르지 않고 설정 오류로 끝낸다."""
     import anthropic
-    return anthropic.Anthropic(api_key=config.get("ANTHROPIC_API_KEY") or None,
-                               timeout=config.timeout(), max_retries=0)
+    key = config.get("ANTHROPIC_API_KEY")
+    if not key:
+        raise _ConfigError(".env의 ANTHROPIC_API_KEY가 비어 있습니다.")
+    return anthropic.Anthropic(api_key=key, base_url=ANTHROPIC_URL, timeout=config.timeout(), max_retries=0)
 
 
 def _post_anthropic(model: str, messages: list[dict]) -> tuple[str, dict]:
@@ -130,6 +137,10 @@ class _Refused(Exception):
     pass
 
 
+class _ConfigError(Exception):
+    pass
+
+
 class _HTTPError(Exception):
     def __init__(self, status: int, text: str):
         super().__init__(f"HTTP {status}: {text}")
@@ -142,6 +153,8 @@ def _classify(exc: Exception) -> str:
         return "timeout"
     if isinstance(exc, _Refused):
         return "refusal"
+    if isinstance(exc, _ConfigError):
+        return "config_error"
     if isinstance(exc, _HTTPError):
         return "rate_limited" if exc.status == 429 else "server_error"
     if getattr(exc, "status_code", None) == 429:  # anthropic SDK의 RateLimitError

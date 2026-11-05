@@ -87,3 +87,21 @@ def test_status_reports_provider_and_hides_base_url(anthropic_env, monkeypatch):
     monkeypatch.setenv("LLM_BASE_URL", "http://10.0.0.5:8000")
     j = TestClient(app).get("/api/status").json()
     assert j["provider"] == "anthropic" and j["base_url"] == ""
+
+
+def test_client_ignores_base_url_and_token_from_environment(anthropic_env, monkeypatch):
+    """환경에 다른 서버 주소·토큰이 있어도 키가 api.anthropic.com으로만 가야 한다(실제로 한 번 새어 나갈 뻔함)."""
+    from urllib.parse import urlparse
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://other.example")
+    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "gateway-token")
+    client = llm_client._anthropic_client()
+    assert urlparse(str(client.base_url)).netloc == "api.anthropic.com"
+    assert all("gateway-token" not in v for v in client.auth_headers.values())
+
+
+def test_missing_api_key_is_config_error_without_using_other_credentials(anthropic_env, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "gateway-token")
+    r = llm_client.call_json("modify", MSGS)
+    assert r.ok is False and r.error_kind == "config_error"

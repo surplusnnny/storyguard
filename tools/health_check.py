@@ -29,9 +29,10 @@ def main():
     if config.mode() != "live":
         print(f"LLM_MODE={config.mode()} 입니다. GPU 서버를 시험하려면 .env에서 LLM_MODE=live로 바꾸세요.")
         sys.exit(2)
-    print(f"서버: {config.base_url()}  (.env LLM_BASE_URL)")
+    where = llm_client.ANTHROPIC_URL if config.provider() == "anthropic" else config.base_url()
+    print(f"서버: {where}  (제공자: {config.provider()})")
     print(f"모델: {', '.join(config.models()) or '(비어 있음)'}  (.env LLM_MODELS)\n")
-    report = {"base_url": config.base_url(), "time": time.strftime("%Y-%m-%d %H:%M:%S"), "models": []}
+    report = {"base_url": where, "time": time.strftime("%Y-%m-%d %H:%M:%S"), "models": []}
     try:
         ids = llm_client.list_models()
         print("서버가 가진 모델 (GET /v1/models 결과):")
