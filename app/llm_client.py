@@ -1,6 +1,7 @@
 """GPU 서버의 vLLM(OpenAI 호환 API)을 부르는 클라이언트.
 
-- 모든 호출의 모델, 응답 시간, 토큰 수, 성공 여부를 SQLite(data/llm_calls.db)에 기록한다(발표 숫자의 근거).
+- 모든 호출의 모델, 응답 시간, 토큰 수, 성공 여부를 기록한다(발표 숫자의 근거).
+  어디에 쓰는지는 app/storage.py가 정한다: Supabase(설정 있을 때) 또는 SQLite(data/llm_calls.db).
 - 실패하면: 같은 모델로 한 번 더 → 다른 모델로 전환. 대기 2초, 4초(LLM_RETRY_WAITS).
 - JSON이 아니면 "JSON만 다시 보내라"고 한 번 더 요청한다.
 - 실시간 호출이 모두 실패하면, 같은 요청을 예전에 성공했던 저장 결과가 있을 때만 그것을 쓰고
@@ -12,12 +13,11 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import sqlite3
 import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from . import config, mock_llm
+from . import config, mock_llm, storage
 
 
 @dataclass
@@ -63,26 +63,12 @@ def extract_json(text: str) -> dict:
     return obj
 
 
-# ------------------------------------------------------------------ 기록
-def _db():
-    config.DATA.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(config.DB_PATH)
-    con.execute("""CREATE TABLE IF NOT EXISTS calls (
-        ts REAL, run_tag TEXT, prompt_name TEXT, model TEXT, source TEXT, ok INTEGER,
-        error_kind TEXT, latency_ms REAL, prompt_tokens INTEGER, completion_tokens INTEGER)""")
-    return con
-
-
+# ------------------------------------------------------------------ 기록 (app/storage.py가 어디에 쓸지 정함)
 def _log(run_tag: str, prompt_name: str, r: LLMResult) -> None:
-    try:
-        con = _db()
-        con.execute("INSERT INTO calls VALUES (?,?,?,?,?,?,?,?,?,?)",
-                    (time.time(), run_tag, prompt_name, r.model, r.source, int(r.ok), r.error_kind,
-                     r.latency_ms, r.prompt_tokens, r.completion_tokens))
-        con.commit()
-        con.close()
-    except sqlite3.Error:
-        pass  # 기록 실패가 시연을 멈추지 않게 한다
+    # 기록 실패가 시연을 멈추지 않게 한다 (storage가 False를 돌려줄 뿐 예외를 내지 않음)
+    storage.log_call({"run_tag": run_tag, "prompt_name": prompt_name, "model": r.model, "source": r.source,
+                      "ok": r.ok, "error_kind": r.error_kind, "latency_ms": r.latency_ms,
+                      "prompt_tokens": r.prompt_tokens, "completion_tokens": r.completion_tokens})
 
 
 def _key(prompt_name: str, messages: list[dict]) -> str:
@@ -91,17 +77,7 @@ def _key(prompt_name: str, messages: list[dict]) -> str:
 
 
 def _save_recording(key: str, prompt_name: str, r: LLMResult) -> None:
-    config.RECORDINGS.mkdir(parents=True, exist_ok=True)
-    (config.RECORDINGS / f"{key}.json").write_text(
-        json.dumps({"prompt_name": prompt_name, "model": r.model, "data": r.data, "saved_at": time.time()},
-                   ensure_ascii=False, indent=1), encoding="utf-8")
-
-
-def _load_recording(key: str) -> dict | None:
-    p = config.RECORDINGS / f"{key}.json"
-    if not p.exists():
-        return None
-    return json.loads(p.read_text(encoding="utf-8"))
+    storage.save_recording(key, prompt_name, r.model, r.data or {})
 
 
 # ------------------------------------------------------------------ 실시간 호출
@@ -154,10 +130,14 @@ def call_json(prompt_name: str, messages: list[dict], context: dict | None = Non
         return r
 
     if mode == "replay":
-        rec = _load_recording(key)
-        r = (LLMResult(ok=True, data=rec["data"], model=rec.get("model", ""), source="replay") if rec else
-             LLMResult(ok=False, source="replay", error_kind="no_recording",
-                       error_message="이 요청에 대한 저장된 결과가 없습니다."))
+        try:
+            rec = storage.load_recording(key)
+            r = (LLMResult(ok=True, data=rec["data"], model=rec.get("model", ""), source="replay") if rec else
+                 LLMResult(ok=False, source="replay", error_kind="no_recording",
+                           error_message="이 요청에 대한 저장된 결과가 없습니다."))
+        except storage.StorageError as exc:
+            r = LLMResult(ok=False, source="replay", error_kind="storage_error",
+                          error_message=f"저장된 결과를 불러오지 못했습니다. {exc}")
         _log(run_tag, prompt_name, r)
         return r
 
@@ -209,7 +189,11 @@ def call_json(prompt_name: str, messages: list[dict], context: dict | None = Non
                        error_message=last.get("error", ""), tries=tries,
                        latency_ms=(time.perf_counter() - t_all) * 1000)
     if config.replay_fallback():
-        rec = _load_recording(key)
+        try:
+            rec = storage.load_recording(key)
+        except storage.StorageError as exc:
+            rec = None
+            failed.error_message += f" (저장된 결과도 불러오지 못함: {exc})"
         if rec:
             r = LLMResult(ok=True, data=rec["data"], model=rec.get("model", ""), source="replay",
                           tries=tries, error_kind=failed.error_kind,
