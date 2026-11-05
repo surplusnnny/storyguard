@@ -13,3 +13,8 @@ eval/results/*
 !eval/results/.gitkeep
 .claude/*
 !.claude/commands/
+
+# 배포 도구가 만드는 로컬 파일 (Vercel·Supabase CLI)
+.vercel/
+supabase/.temp/
+supabase/.branches/
