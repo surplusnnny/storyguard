@@ -1,0 +1,16 @@
+# Vercel에 올리지 않는 것. data/games/와 data/schema.json은 실행에 필요하므로 빼지 않는다.
+.venv/
+.env
+.env.*
+tests/
+eval/
+docs/
+tools/
+supabase/
+data/recordings/
+data/llm_calls.db
+data/health_*.json
+data/games/edited_game.json
+*.bat
+requirements-dev.txt
+.superpowers/
