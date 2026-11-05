@@ -18,6 +18,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+def make_output_safe(stream) -> None:
+    """출력 인코딩이 ✓ 같은 문자를 못 찍어도 죽지 않고 ?로 바꿔 찍게 한다(cp949 파이프 등)."""
+    if hasattr(stream, "reconfigure"):
+        stream.reconfigure(errors="replace")
+
+
 DEMO = "두 번째 퀘스트 보상을 황금 열쇠에서 마법 지팡이로 바꿔 줘"
 
 
@@ -105,6 +111,7 @@ def main():
     ap.add_argument("--url", default="")
     ap.add_argument("--repeat", type=int, default=1)
     args = ap.parse_args()
+    make_output_safe(sys.stdout)
     cli = Client(args.url or None)
     try:
         st = cli.get("/api/status")
