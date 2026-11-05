@@ -116,3 +116,14 @@ def test_missing_api_key_is_config_error_without_using_other_credentials(anthrop
 def test_api_root_does_not_double_v1(monkeypatch, base, expected):
     monkeypatch.setenv("LLM_BASE_URL", base)
     assert config.api_root() == expected
+
+
+def test_list_models_strips_models_prefix(monkeypatch):
+    """Gemini는 'models/gemini-...'로 돌려준다. .env에는 접두어 없이 적으므로 비교가 맞아야 한다."""
+    import httpx
+
+    def handler(request):
+        return httpx.Response(200, json={"data": [{"id": "models/gemini-3.5-flash-lite"}, {"id": "plain-model"}]})
+    real = httpx.Client
+    monkeypatch.setattr(httpx, "Client", lambda **kw: real(transport=httpx.MockTransport(handler), **kw))
+    assert llm_client.list_models() == ["gemini-3.5-flash-lite", "plain-model"]

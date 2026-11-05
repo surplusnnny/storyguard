@@ -259,4 +259,4 @@ def list_models() -> list[str]:
         resp = client.get(f"{config.api_root()}/models",
                           headers={"Authorization": f"Bearer {config.api_key()}"})
     resp.raise_for_status()
-    return [m["id"] for m in resp.json().get("data", [])]
+    return [m["id"].removeprefix("models/") for m in resp.json().get("data", [])]  # Gemini는 models/ 접두어를 붙임
