@@ -8,7 +8,7 @@ NEXT AI 해커톤(한양여자대학교 × Tilon × KTNF GPU, 2026.11.5~6) 출�
 필요한 것: Python 3.10 이상 (`py --version`으로 확인). 없으면 PowerShell에서 `winget install Python.Python.3.13`.
 
 1. 이 폴더를 원하는 곳에 압축 해제
-2. `setup.bat` 더블클릭 → 가상환경, 패키지 설치, 시험 73개 실행 (마지막에 `73 passed`가 보여야 함)
+2. `setup.bat` 더블클릭 → 가상환경, 패키지 설치, 시험 78개 실행 (마지막에 `78 passed`가 보여야 함)
 3. `run.bat` 더블클릭 → 브라우저가 http://localhost:8501 을 연다
 
 처음에는 `.env`가 `LLM_MODE=mock`(모의 모드)이라 GPU 서버 없이 시연 흐름을 연습할 수 있다. 화면 상단에 "모의 모드"가 표시된다.
@@ -37,7 +37,7 @@ JSON이 계속 실패하면 `.env`에서 `LLM_JSON_MODE=0`으로 바꿔 다시 �
 | `evaluate.bat --show` | 평가 세트 20개 보기 (실험 전 확인) |
 | `evaluate.bat --models A,B --retry both` | 평가 실험, 결과는 `eval/results/` |
 | `run_fake_llm.bat` | 가짜 vLLM 서버(연습용). `.env`를 `LLM_MODE=live`, `LLM_BASE_URL=http://127.0.0.1:8001`, `LLM_MODELS=fake-ok`로 두면 live 경로 연습 |
-| `test.bat` | 시험 73개 |
+| `test.bat` | 시험 78개 |
 
 ## 시연 순서 (3분)
 1. 화면을 연다. 지도에 "원본 게임: 엔딩까지 갈 수 있습니다".

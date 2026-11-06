@@ -219,3 +219,24 @@ body.has-bg {
   background-size: cover; background-attachment: fixed;
 }
 .credits { margin: 16px; text-align: center; font-size: 13px; color: var(--ink-soft); }
+
+/* ---------- 서비스 소개 (글자만 읽어도 이해되도록 HTML에 직접 씀) ---------- */
+.intro {
+  display: grid; grid-template-columns: 1.15fr 1fr; gap: 6px 24px;
+  padding: 12px 24px; background: rgba(255, 255, 255, 0.94); border-bottom: 3px solid var(--ink);
+  font-size: 13.5px; line-height: 1.5; color: var(--ink);
+}
+.intro h2 { font-family: var(--pixel); font-weight: normal; font-size: 21px; margin: 0 0 4px; }
+.intro h3 { font-family: var(--pixel); font-weight: normal; font-size: 16px; margin: 0 0 4px; }
+.intro p { margin: 0 0 6px; }
+.intro ol.steps { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 2px; }
+.intro ul { margin: 0; padding-left: 18px; }
+.intro .demo-req { color: var(--ink-soft); }
+.intro .rej b { color: var(--bad); }
+.intro .ok b { color: var(--ok); }
+.intro .demo-note { color: var(--ink-soft); font-size: 12.5px; margin-top: 4px; }
+.intro-more { grid-column: 1 / -1; }
+.intro-more summary { cursor: pointer; font-family: var(--pixel); font-size: 15px; }
+.intro-more ul { margin-top: 4px; }
+.noscript { margin: 8px 24px; padding: 8px 12px; background: var(--gold); color: var(--ink); }
+@media (max-width: 1100px) { .intro { grid-template-columns: 1fr; } }

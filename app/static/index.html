@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>StoryGuard</title>
+<title>StoryGuard - AI가 고친 게임 스토리를 알고리즘이 엔딩까지 검증합니다</title>
+<meta name="description" content="1인 인디게임 개발자가 말로 요청하면 AI가 게임 데이터(game.json)를 고치고, 규칙 엔진이 엔딩까지 갈 수 있는지와 요청하지 않은 변경이 없는지를 검증하는 서비스입니다.">
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" type="image/png" href="/static/assets/favicon_32.png">
 </head>
@@ -21,6 +22,41 @@
     <span class="health" id="storeText"></span>
   </div>
 </header>
+
+<section class="intro" aria-label="서비스 소개">
+  <div class="intro-main">
+    <h2>AI가 고치고, 알고리즘이 엔딩까지 확인합니다</h2>
+    <p>1인 인디게임 개발자가 "두 번째 퀘스트 보상을 마법 지팡이로 바꿔 줘"처럼 말로 요청하면, AI가 게임 데이터(game.json)를 고치고,
+      규칙 엔진이 <b>처음부터 엔딩까지 실제로 갈 수 있는지</b>와 <b>요청하지 않은 변경이 없는지</b>를 판정합니다.
+      AI의 말만 믿지 않고 알고리즘이 끝까지 확인하는 것이 이 서비스의 핵심입니다.</p>
+    <ol class="steps">
+      <li><b>1. 요청</b> 바꾸고 싶은 점을 말로 적습니다 (오른쪽의 예시 문구를 눌러도 됩니다)</li>
+      <li><b>2. AI 수정</b> AI는 game.json만 고치고, 엔딩 판정은 하지 않습니다</li>
+      <li><b>3. 검증</b> 규칙 엔진이 엔딩 도달과 요청하지 않은 변경을 판정하고, 실패하면 이유를 보여 줍니다</li>
+    </ol>
+  </div>
+  <div class="intro-demo">
+    <h3>실제 AI 시연 결과 (예시 문구 1번)</h3>
+    <p class="demo-req">요청: 두 번째 퀘스트 보상을 황금 열쇠에서 마법 지팡이로 바꿔 줘 → 엔딩이 막힘 (마지막 던전의 황금 열쇠를 얻을 수 없음)</p>
+    <ul>
+      <li class="rej">AI 수정안 3개 중 1번 "황금 열쇠를 다른 곳에서도 얻을 수 있게 추가하기": 엔딩에는 가지만 새 이벤트가 추가되어 <b>거절</b></li>
+      <li class="rej">2번 "마지막 던전의 입장 조건을 다시 맞추기": 던전 입장 조건을 바꿔서 <b>거절</b></li>
+      <li class="ok">3번 "두 번째 퀘스트 보상을 두 개로 나누기": 요청을 유지하고 엔딩까지 15단계로 <b>통과</b></li>
+    </ul>
+    <p class="demo-note">모델 gpt-5.4-mini가 실제로 만든 응답을 저장해 재생한 결과이며, 화면에는 "저장된 결과"로 표시됩니다. 저장된 결과가 없는 새 문구는 실시간으로 AI를 호출합니다.</p>
+  </div>
+  <details class="intro-more">
+    <summary>기술과 한계 더 보기</summary>
+    <ul>
+      <li>구성: Python(FastAPI) 서버. 게임을 직접 플레이하는 규칙과 검증기가 같은 규칙 엔진을 쓰기 때문에 판정이 화면과 어긋나지 않습니다.</li>
+      <li>역할 분리: AI는 game.json만 수정하고, 엔딩 도달 판정은 검증기(경로 탐색)만 합니다. AI 호출이 실패하면 실패를 그대로 화면에 표시합니다.</li>
+      <li>기록: 모든 AI 호출의 모델, 응답 시간, 토큰 수와 저장된 결과를 Supabase에 남깁니다. 배포는 GitHub와 Vercel을 씁니다.</li>
+      <li>교내 GPU(틸론): 주피터에서 오픈소스 이미지 모델(stabilityai/sdxl-turbo)로 이 화면의 로고와 배경 이미지를 만들었습니다.</li>
+      <li>한계: 지금은 샘플 게임 1개("잃어버린 왕관")만 지원합니다. 새 문구는 AI의 응답에 따라 거절되거나 실패할 수 있고, 그 사유는 화면에 그대로 표시됩니다.</li>
+    </ul>
+  </details>
+</section>
+<noscript><p class="noscript">이 화면의 지도와 수정 기능은 자바스크립트가 필요합니다. 위의 서비스 소개와 시연 결과는 자바스크립트 없이도 읽을 수 있습니다.</p></noscript>
 
 <main class="layout">
   <!-- 왼쪽: 게임 창 -->
