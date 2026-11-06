@@ -108,6 +108,13 @@ def request_budget() -> float:
     return float(get("LLM_REQUEST_BUDGET", "0") or 0)
 
 
+def live_call_limit() -> int:
+    """한 서버가 한 시간에 보낼 수 있는 실시간 AI 호출 수(0이면 제한 없음). 비워 두면 Vercel에서만 60회.
+    저장된 결과 재생은 세지 않는다. 공개 주소에서 누가 요청을 쏟아부어도 공용 예산이 바닥나지 않게 하려는 것."""
+    v = get("LLM_LIVE_CALL_LIMIT", "").strip()
+    return int(v) if v else (60 if on_vercel() else 0)
+
+
 def on_vercel() -> bool:
     """Vercel 함수에서 실행 중인지. Vercel은 런타임에 VERCEL=1을 넣는다(Preview 배포에서 확인 예정)."""
     return get("VERCEL", "") == "1"

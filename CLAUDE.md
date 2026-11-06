@@ -35,7 +35,7 @@ AI 기반 1인 인디게임 유지보수 및 스토리 검증 에이전트. NEXT
 12. 세션을 마칠 때마다 완료한 단계, 결정과 그 이유, 버린 대안, 알려진 문제, 다음에 할 일을 `실행기록.md`에 추가한다.
 
 ## 시험
-- `python -m pytest -q` 78개가 모두 통과해야 한다. 가짜 vLLM 서버를 자동으로 띄워 live 경로도 시험한다.
+- `python -m pytest -q` 89개가 모두 통과해야 한다. 가짜 vLLM 서버를 자동으로 띄워 live 경로도 시험한다.
 - 시험이 통과해도 화면은 브라우저에서 직접 눌러 확인한다.
 
 ## 배포
@@ -46,3 +46,4 @@ AI 기반 1인 인디게임 유지보수 및 스토리 검증 에이전트. NEXT
 - 공개 사이트 AI 모드는 지금 replay_first다(Vercel `LLM_MODE`, 키는 Vercel `LLM_API_KEY`에 Sensitive로 등록). 심사가 끝나면 `LLM_API_KEY`를 삭제하고 `vercel.cmd env update LLM_MODE --environment production --value replay --yes` 후 `vercel.cmd deploy --prod`로 저장된 결과만 보이게 되돌린다. 키는 코드·GitHub·발표자료·화면 캡처에 넣지 않는다.
 - 공개 사이트 점검: `python tools/demo_check.py --url https://storyguard.vercel.app` (실행할 때마다 Supabase llm_calls에 env=vercel 행이 6건 늘어난다).
 - 자세한 계획과 결정: docs/DEPLOY-PLAN.md
+- 보안(2026-11-06): 요청 본문 300KB·수정 문구 500자 제한, 보안 헤더(CSP 등), 실시간 AI 호출 한도(`LLM_LIVE_CALL_LIMIT`, 비우면 Vercel에서 시간당 60회, 저장된 결과 재생은 세지 않음). 키는 코드·GitHub·화면에 넣지 않는다(현재 파일과 전체 커밋 기록 검사에서 0건).

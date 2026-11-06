@@ -13,7 +13,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import threading
 import time
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -38,6 +40,23 @@ class LLMResult:
         return {"ok": self.ok, "model": self.model, "source": self.source,
                 "error_kind": self.error_kind, "error_message": self.error_message,
                 "latency_ms": round(self.latency_ms, 1), "tries": self.tries}
+
+
+# ------------------------------------------------------------------ 실시간 호출 한도
+_live_calls: deque = deque()
+_live_lock = threading.Lock()
+
+
+def _take_live_slot(limit: int) -> bool:
+    """최근 한 시간 안의 실시간 호출이 limit보다 적으면 한 자리를 쓰고 True."""
+    now = time.time()
+    with _live_lock:
+        while _live_calls and now - _live_calls[0] > 3600:
+            _live_calls.popleft()
+        if len(_live_calls) >= limit:
+            return False
+        _live_calls.append(now)
+        return True
 
 
 # ------------------------------------------------------------------ JSON 꺼내기
@@ -204,6 +223,13 @@ def call_json(prompt_name: str, messages: list[dict], context: dict | None = Non
             r = LLMResult(ok=True, data=rec["data"], model=rec.get("model", ""), source="replay")
             _log(run_tag, prompt_name, r)
             return r
+
+    limit = config.live_call_limit()
+    if limit and not _take_live_slot(limit):
+        r = LLMResult(ok=False, source="live", error_kind="live_limit",
+                      error_message=f"실시간 AI 호출 한도(시간당 {limit}회)에 도달했습니다. 저장된 결과는 계속 볼 수 있습니다.")
+        _log(run_tag, prompt_name, r)
+        return r
 
     models = models or config.models()
     if not models:

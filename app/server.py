@@ -6,10 +6,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from . import config, graph, llm_client, pipeline, storage
 from .engine import Game, State
@@ -20,6 +20,26 @@ GAMES = config.DATA / "games"
 
 app = FastAPI(title="StoryGuard")
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
+MAX_BODY = 300_000  # 게임 데이터는 수 KB. 이보다 큰 요청은 거절한다(저장소·AI 호출 남용 방지)
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
+       "font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+
+
+@app.middleware("http")
+async def guard(request: Request, call_next):
+    cl = request.headers.get("content-length")
+    if cl and cl.isdigit() and int(cl) > MAX_BODY:
+        resp = JSONResponse({"error": "요청이 너무 큽니다."}, status_code=413)
+    else:
+        resp = await call_next(request)
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if not request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):  # 자동 API 문서는 외부 스크립트를 쓴다
+        resp.headers["Content-Security-Policy"] = CSP
+    return resp
 
 
 class GameBody(BaseModel):
@@ -34,7 +54,7 @@ class VerifyBody(BaseModel):
 
 class ModifyBody(BaseModel):
     game: dict
-    request: str
+    request: str = Field(max_length=500)
     auto_retry: bool = True
 
 
