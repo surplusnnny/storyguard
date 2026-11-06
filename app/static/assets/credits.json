@@ -1,0 +1,9 @@
+{
+ "model": "stabilityai/sdxl-turbo",
+ "tool": "틸론 주피터(사용자 설명)",
+ "files": {
+  "logo": "branding/storyguard_emblem",
+  "background": "branding/lighthouse_title_art"
+ },
+ "note": "GPU 모델명은 manifest.json에 없어 기록하지 않음"
+}

@@ -127,7 +127,7 @@ button { font: inherit; color: inherit; }
 .map-scroll { overflow: auto; flex: 1; max-height: calc(100vh - 290px); }
 .lane-title { font-size: 13px; fill: var(--ink-soft); }
 .lane-bg { fill: var(--sky); opacity: .45; }
-#map { display: block; }
+#map { display: block; max-width: 100%; height: auto; }
 #map text { font-family: var(--pixel); }
 .node rect { stroke: var(--ink); stroke-width: 2.5; }
 .node.k-area rect { fill: #fff; }
@@ -213,9 +213,9 @@ details.path ol { padding-left: 24px; margin: 6px 0 0; max-height: 240px; overfl
 .changes li { margin: 2px 0; }
 .brand { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; }
 .brand p { flex-basis: 100%; }
-.logo { width: 44px; height: 44px; image-rendering: pixelated; }
+.logo { width: 44px; height: 44px; border-radius: 6px; }
 body.has-bg {
   background-image: linear-gradient(rgba(220, 235, 250, 0.6), rgba(220, 235, 250, 0.6)), var(--bg-url);
-  background-size: cover; background-attachment: fixed; image-rendering: pixelated;
+  background-size: cover; background-attachment: fixed;
 }
 .credits { margin: 16px; text-align: center; font-size: 13px; color: var(--ink-soft); }
