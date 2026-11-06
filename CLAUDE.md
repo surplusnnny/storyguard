@@ -3,7 +3,7 @@
 AI 기반 1인 인디게임 유지보수 및 스토리 검증 에이전트. NEXT AI 해커톤(2026.11.5~6) 출품작.
 핵심 메시지: **AI가 고치고, 알고리즘이 엔딩까지 검증한다.**
 
-방침(2026-11-06, 사용자 결정): **LLM은 외부 API로 부르고, 교내 GPU(틸론)는 주피터에서 로고·배경 이미지를 만드는 데만 쓴다**(사용자 설명). 지금은 주최 측이 준 OpenAI 임시 키(2026-11-06 18:00 만료)로 `gpt-5.4-mini`를 부른다(`LLM_BASE_URL=https://api.openai.com/v1`, 키는 `.env`의 `LLM_API_KEY`). 시연 연쇄와 프리셋 3개의 AI 결과는 Supabase `llm_recordings`에 저장돼 있고, **공개 사이트는 `LLM_MODE=replay`로 그 저장된 결과를 보여 준다**(화면에 "저장된 결과"로 표시, 새 문구는 "저장된 결과 없음"). Claude API(`LLM_PROVIDER=anthropic`)와 Gemini는 결제 거부·불안정으로 쓰지 않는다(코드 경로는 남아 있음). 아래 구조·실행 절의 'GPU 서버' 설명은 같은 vLLM(OpenAI 호환) 코드 경로를 가리킨다.
+방침(2026-11-06, 사용자 결정): **LLM은 외부 API로 부르고, 교내 GPU(틸론)는 주피터에서 로고·배경 이미지를 만드는 데만 쓴다**(사용자 설명). 주최 측이 준 OpenAI 임시 키(2026-11-06 18:00 만료)로 `gpt-5.4-mini`를 부른다(`LLM_BASE_URL=https://api.openai.com/v1`, 키는 `.env`의 `LLM_API_KEY`). 시연 연쇄와 프리셋 3개의 AI 결과는 Supabase `llm_recordings`에 저장돼 있고, **공개 사이트는 `LLM_MODE=replay_first`**(저장된 결과가 있으면 그것을 "저장된 결과"로 표시하고, 없는 새 문구는 실시간으로 OpenAI를 호출)로 운영한다. 발표는 PPT로 하고 구현 화면은 AI가 심사한다(사용자 설명, 심사는 18:00 전에 끝남). 그래서 index.html에 자바스크립트 없이 읽히는 서비스 소개와 시연 결과 요약을 직접 넣었다. Claude API(`LLM_PROVIDER=anthropic`)와 Gemini는 결제 거부·불안정으로 쓰지 않는다(코드 경로는 남아 있음). 아래 구조·실행 절의 'GPU 서버' 설명은 같은 vLLM(OpenAI 호환) 코드 경로를 가리킨다.
 
 ## 구조
 - `app/engine.py` 게임 규칙(이동, 퀘스트 받기/완료, 이벤트). 검증기와 플레이 화면이 함께 쓴다.
@@ -35,7 +35,7 @@ AI 기반 1인 인디게임 유지보수 및 스토리 검증 에이전트. NEXT
 12. 세션을 마칠 때마다 완료한 단계, 결정과 그 이유, 버린 대안, 알려진 문제, 다음에 할 일을 `실행기록.md`에 추가한다.
 
 ## 시험
-- `python -m pytest -q` 73개가 모두 통과해야 한다. 가짜 vLLM 서버를 자동으로 띄워 live 경로도 시험한다.
+- `python -m pytest -q` 78개가 모두 통과해야 한다. 가짜 vLLM 서버를 자동으로 띄워 live 경로도 시험한다.
 - 시험이 통과해도 화면은 브라우저에서 직접 눌러 확인한다.
 
 ## 배포
@@ -43,6 +43,6 @@ AI 기반 1인 인디게임 유지보수 및 스토리 검증 에이전트. NEXT
 - 배포 방법: master에 push하면 Vercel이 Production으로 자동 배포한다. 수동은 `vercel.cmd deploy --prod`(PowerShell은 vercel.ps1이 막혀 .cmd를 쓴다).
 - 저장소: Supabase 프로젝트 storyguard(ref zycgmmedpkwyupjgpkix). 테이블 llm_calls, llm_recordings, saved_games(RLS 켬, 정책 없음). DB 변경은 `supabase/migrations`에 SQL을 두고 `supabase db push`로만 한다. `db reset` 금지.
 - Vercel Production 환경 변수 이름: LLM_MODE, LLM_REQUEST_BUDGET, SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_TIMEOUT. 값은 문서·채팅·로그에 적지 않는다. 확인은 `vercel.cmd env ls production`.
-- 공개 사이트 AI 모드는 지금 replay다(Vercel `LLM_MODE`). 되돌리려면 `vercel.cmd env update LLM_MODE --environment production --value mock --yes` 후 `vercel.cmd deploy --prod`. OpenAI 키는 Vercel에 넣지 않는다(공용 예산).
+- 공개 사이트 AI 모드는 지금 replay_first다(Vercel `LLM_MODE`, 키는 Vercel `LLM_API_KEY`에 Sensitive로 등록). 심사가 끝나면 `LLM_API_KEY`를 삭제하고 `vercel.cmd env update LLM_MODE --environment production --value replay --yes` 후 `vercel.cmd deploy --prod`로 저장된 결과만 보이게 되돌린다. 키는 코드·GitHub·발표자료·화면 캡처에 넣지 않는다.
 - 공개 사이트 점검: `python tools/demo_check.py --url https://storyguard.vercel.app` (실행할 때마다 Supabase llm_calls에 env=vercel 행이 6건 늘어난다).
 - 자세한 계획과 결정: docs/DEPLOY-PLAN.md
