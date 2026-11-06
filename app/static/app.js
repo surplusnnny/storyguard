@@ -71,6 +71,54 @@ async function init() {
   await setupGames();
 }
 
+// ------------------------------------------------------------ 내 game.json 올리기
+function upMessage(html, bad) { const m = $("upMsg"); m.className = "up-msg" + (bad ? " bad" : ""); m.innerHTML = html; }
+
+function setupUpload() {
+  const dlg = $("uploadDlg"), txt = $("upText");
+  $("uploadBtn").onclick = () => { upMessage(""); dlg.showModal(); };
+  $("upClose").onclick = () => dlg.close();
+  $("upFile").onchange = async (e) => { const f = e.target.files[0]; if (f) { txt.value = await f.text(); upMessage("파일을 읽었습니다. [검증하고 불러오기]를 누르세요."); } };
+  $("upSample").onclick = async () => {
+    const g = await api("/api/game/lighthouse_game");
+    txt.value = JSON.stringify(g.game, null, 2);
+    upMessage("예시(등대의 불빛)를 채웠습니다. 고쳐서 써 보거나 그대로 검증해 보세요.");
+  };
+  $("upGo").onclick = () => uploadGame(txt.value, dlg);
+}
+
+async function uploadGame(text, dlg) {
+  if (!text.trim()) return upMessage("game.json 내용을 넣어 주세요.", true);
+  if (new Blob([text]).size > 300000) return upMessage("300KB를 넘어서 올릴 수 없습니다.", true);
+  let game;
+  try { game = JSON.parse(text); } catch (e) { return upMessage("JSON 문법 오류: " + esc(e.message), true); }
+  if (!game || typeof game !== "object" || Array.isArray(game)) return upMessage("game.json은 { ... } 형태의 객체여야 합니다.", true);
+  let r;
+  try { r = await api("/api/verify", { game }); } catch (e) { return upMessage("검증하지 못했습니다: " + esc(e.message), true); }
+  const errs = r.verify.schema_errors || [];
+  if (errs.length) {
+    return upMessage(`형식 오류 ${errs.length}개 — 고쳐서 다시 시도하세요<ul>` +
+      errs.slice(0, 8).map((e) => `<li>${esc(e.path)}: ${esc(e.message)}</li>`).join("") + (errs.length > 8 ? `<li>…외 ${errs.length - 8}개</li>` : "") + "</ul>", true);
+  }
+  S.uploaded = { game, r };
+  loadUploaded(game, r);
+  dlg.close();
+}
+
+function loadUploaded(game, r) {
+  S.original = game; S.base = game; S.last = null; S.request = "";
+  $("gameTitle").textContent = game.meta?.title || "내 게임 (업로드)";
+  const sel = $("gameSelect");
+  let o = sel.querySelector('option[value="__upload"]');
+  if (!o) { o = document.createElement("option"); o.value = "__upload"; sel.appendChild(o); }
+  o.textContent = "내 게임 (업로드)"; sel.value = "__upload";
+  renderPresets("__upload");
+  $("result").innerHTML = `<p class="empty">올린 게임입니다. 수정 요청은 실시간으로 AI를 호출합니다 (저장된 결과 없음).</p>`;
+  renderMap(r.graph, r.verify, false);
+  renderVerdict(r.verify, "올린 게임");
+  startPlay(game, "올린 게임으로 플레이 중");
+}
+
 // ------------------------------------------------------------ 게임 고르기
 function renderPresets(name) {
   const box = $("presets"); box.innerHTML = "";
@@ -100,8 +148,12 @@ async function setupGames() {
     .sort((a, b) => (a === "sample_game" ? -1 : b === "sample_game" ? 1 : a.localeCompare(b)));
   const sel = $("gameSelect");
   sel.innerHTML = names.map((n) => `<option value="${esc(n)}">${esc(GAME_LABEL[n] || n)}</option>`).join("");
-  sel.onchange = () => loadGame(sel.value).catch((e) => alert(e.message));
+  sel.onchange = () => {
+    if (sel.value === "__upload" && S.uploaded) { loadUploaded(S.uploaded.game, S.uploaded.r); return; }
+    loadGame(sel.value).catch((e) => alert(e.message));
+  };
   sel.value = names[0];  // 목록의 선택 표시와 실제로 불러오는 게임이 항상 같게
+  setupUpload();
   await loadGame(names[0]);
 }
 

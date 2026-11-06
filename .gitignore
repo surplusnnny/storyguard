@@ -9,8 +9,8 @@ data/llm_calls.db
 data/health_*.json
 data/recordings/*.json
 data/games/edited_game.json
-eval/results/*
-!eval/results/.gitkeep
+eval/results/*-mock/
+eval/results/*-mock
 .claude/*
 !.claude/commands/
 
