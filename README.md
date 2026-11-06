@@ -209,4 +209,4 @@ main.py          Vercel 진입점
 ## 글꼴과 이미지
 
 - 글꼴: Galmuri11, Pretendard (SIL Open Font License 1.1). `app/static/fonts/README.txt` 참고.
-- 로고·배경 이미지: 교내 GPU(틸론) 주피터에서 `stabilityai/sdxl-turbo`로 생성. 모델의 이용 조건은 사용 전에 확인해 주세요.
+- 이미지: 교내 GPU(틸론) 주피터에서 `stabilityai/sdxl-turbo`로 생성한 16장(로고, 배경, 캐릭터, 아이템, 엔딩). 원본 결과와 생성 기록은 [`docs/gpu-assets/`](docs/gpu-assets/), 서비스에 적용한 파일은 `app/static/assets/`입니다. 모델의 이용 조건은 사용 전에 확인해 주세요.
