@@ -42,6 +42,27 @@ async def guard(request: Request, call_next):
     return resp
 
 
+_UNREADABLE = [{"type": "schema", "path": "$", "message": "게임 데이터를 해석하지 못했습니다. data/schema.json 형식을 확인하세요."}]
+
+
+def _safe_verify(game: dict, original: dict | None = None, declared: list[str] | None = None) -> dict:
+    """형식이 깨진 게임이 와도 서버 오류 대신 오류 목록을 돌려준다(외부 사용자가 올린 파일 대비)."""
+    try:
+        return verify(game, original, declared)
+    except Exception:  # noqa: BLE001 - 검증기가 아예 읽지 못하는 경우
+        return {"reachable": False, "passed": False, "blockers": [], "warnings": [], "changes": [],
+                "unintended_changes": [], "path": [], "schema_errors": _UNREADABLE}
+
+
+def _bad_game(*games: dict):
+    """형식 오류가 있으면 422 응답을, 없으면 None을 돌려준다. AI를 부르기 전에 거른다."""
+    for g in games:
+        errs = _safe_verify(g).get("schema_errors") or []
+        if errs:
+            return JSONResponse({"error": "게임 데이터 형식 오류", "schema_errors": errs}, status_code=422)
+    return None
+
+
 class GameBody(BaseModel):
     game: dict
 
@@ -124,22 +145,30 @@ def game(name: str):
 
 @app.post("/api/verify")
 def api_verify(b: VerifyBody):
-    v = verify(b.game, b.original, b.declared)
+    v = _safe_verify(b.game, b.original, b.declared)
+    if v.get("schema_errors"):
+        return {"verify": v, "graph": None}  # 형식이 깨졌으면 지도를 그리지 않는다
     return {"verify": v, "graph": graph.build(b.game, v)}
 
 
 @app.post("/api/analyze")
 def api_analyze(b: GameBody):
+    if (bad := _bad_game(b.game)):
+        return bad
     return pipeline.analyze(b.game, run_tag="ui")
 
 
 @app.post("/api/modify")
 def api_modify(b: ModifyBody):
+    if (bad := _bad_game(b.game)):
+        return bad
     return pipeline.modify(b.game, b.request, auto_retry=b.auto_retry, run_tag="ui")
 
 
 @app.post("/api/apply_fix")
 def api_apply_fix(b: FixBody):
+    if (bad := _bad_game(b.original, b.failed_game)):
+        return bad
     return pipeline.apply_fix(b.original, b.request, b.failed_game, b.fix, b.intent_paths, b.declared, run_tag="ui")
 
 
@@ -156,6 +185,8 @@ def _play_view(g: Game, s: State) -> dict:
 
 @app.post("/api/play")
 def api_play(b: PlayBody):
+    if (bad := _bad_game(b.game)):
+        return bad
     g = Game(b.game)
     s = State.from_dict(b.state) if b.state else g.initial_state()
     log = None
@@ -173,5 +204,7 @@ def api_play(b: PlayBody):
 
 @app.post("/api/save_game")
 def save_game(b: GameBody):
+    if (bad := _bad_game(b.game)):
+        return bad
     """수정된 게임 저장(시연 뒤 확인용). 로컬은 data/games/edited_game.json, 배포는 Supabase saved_games."""
     return storage.save_game(b.game)

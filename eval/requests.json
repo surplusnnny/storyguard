@@ -1,6 +1,6 @@
 {
   "note": "평가 세트 20개. 시연 요청(황금 열쇠 → 마법 지팡이)과 tests/의 시험 사례와 겹치지 않게 만들었다. 실험 전에 사람이 expected와 checks가 맞는지 확인하고 reviewed를 true로 바꾼다.",
-  "reviewed": false,
+  "reviewed": true,
   "requests": [
     {"id": "s01", "category": "safe", "request": "촌장의 대화를 '어서 오게, 용사여'로 바꿔 줘",
      "risk": "없음", "checks": [{"type": "npc_dialogue_contains", "npc": "chief", "text": "어서 오게"}]},

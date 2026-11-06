@@ -15,7 +15,7 @@
     <h1>StoryGuard</h1>
     <p>AI가 고치고, 알고리즘이 엔딩까지 확인합니다</p>
   </div>
-  <div class="game-title"><span id="gameTitle">게임을 불러오는 중</span> <select id="gameSelect" aria-label="게임 선택"></select></div>
+  <div class="game-title"><span id="gameTitle">게임을 불러오는 중</span> <select id="gameSelect" aria-label="게임 선택"></select> <button type="button" id="uploadBtn" class="upload-btn">내 game.json 올리기</button></div>
   <div class="status">
     <span class="badge" id="modeBadge">모드 확인 중</span>
     <span class="health" id="healthText"></span>
@@ -52,7 +52,7 @@
       <li>역할 분리: AI는 game.json만 수정하고, 엔딩 도달 판정은 검증기(경로 탐색)만 합니다. AI 호출이 실패하면 실패를 그대로 화면에 표시합니다.</li>
       <li>기록: 모든 AI 호출의 모델, 응답 시간, 토큰 수와 저장된 결과를 Supabase에 남깁니다. 배포는 GitHub와 Vercel을 씁니다.</li>
       <li>교내 GPU(틸론): 주피터에서 오픈소스 이미지 모델(stabilityai/sdxl-turbo)로 이 화면의 로고와 배경 이미지를 만들었습니다.</li>
-      <li>한계: 지금은 샘플 게임 1개("잃어버린 왕관")만 지원합니다. 새 문구는 AI의 응답에 따라 거절되거나 실패할 수 있고, 그 사유는 화면에 그대로 표시됩니다.</li>
+      <li>한계: 샘플 게임 2개("잃어버린 왕관", "등대의 불빛")와, 사용자가 올린 game.json(data/schema.json 형식, 위쪽 "내 game.json 올리기")을 지원합니다. 새 문구는 AI의 응답에 따라 거절되거나 실패할 수 있고, 그 사유는 화면에 그대로 표시됩니다.</li>
     </ul>
   </details>
 </section>
@@ -108,6 +108,18 @@
     </div>
   </section>
 </main>
+<dialog id="uploadDlg" aria-labelledby="upTitle">
+  <h2 id="upTitle">내 game.json 검증하기</h2>
+  <p>game.json을 올리거나 붙여 넣으면 엔딩까지 갈 수 있는지 검증합니다. 파일은 서버에 저장되지 않고, 수정 요청을 보낼 때만 전송됩니다. (형식: data/schema.json, 300KB 이하)</p>
+  <input type="file" id="upFile" accept=".json,application/json" aria-label="game.json 파일 선택">
+  <textarea id="upText" rows="12" spellcheck="false" aria-label="game.json 내용" placeholder='{ "meta": {...}, "start": {...}, "items": [...], "areas": [...], "npcs": [...], "quests": [...], "events": [...], "ending": {...} }'></textarea>
+  <div id="upMsg" class="up-msg" aria-live="polite"></div>
+  <div class="up-actions">
+    <button type="button" id="upSample">예시 불러오기</button>
+    <button type="button" id="upGo" class="primary">검증하고 불러오기</button>
+    <button type="button" id="upClose">닫기</button>
+  </div>
+</dialog>
 <footer id="credits" class="credits" hidden></footer>
 <script src="/static/changes.js"></script>
 <script src="/static/app.js"></script>

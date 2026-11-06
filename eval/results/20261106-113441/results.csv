@@ -1,0 +1,11 @@
+﻿id,category,model,retry,status,modified,first_reachable,first_unintended,first_pass,final_pass,intent_ok,success,attempts,llm_fail_calls,llm_ms,total_ms,sources,first_blocker
+r01,risky,gpt-5.4-mini,on,failed,1,0,0,0,0,1,0,4,0,28978.6,42938.9,live,missing_source
+r02,risky,gpt-5.4-mini,on,failed,1,0,0,0,0,1,0,4,0,28155.5,38178.6,live,missing_source
+r03,risky,gpt-5.4-mini,on,passed,1,0,0,0,1,1,1,3,0,22303.9,30083.5,live,missing_source
+r04,risky,gpt-5.4-mini,on,failed,1,0,0,0,0,1,0,4,0,28559.7,37197.1,live,missing_source
+r05,risky,gpt-5.4-mini,on,failed,1,1,1,0,0,1,0,4,0,33522.1,43254.1,live,
+r06,risky,gpt-5.4-mini,on,passed,1,0,0,0,1,1,1,3,0,21160.5,28316.1,live,missing_source
+r07,risky,gpt-5.4-mini,on,failed,1,0,0,0,0,1,0,4,0,30049.0,37970.5,live,circular_dependency
+r08,risky,gpt-5.4-mini,on,failed,1,0,0,0,0,1,0,4,0,25157.8,33216.5,live,missing_source
+r09,risky,gpt-5.4-mini,on,failed,1,0,1,0,0,1,0,4,0,26406.7,34582.9,live,invalid_data
+r10,risky,gpt-5.4-mini,on,passed,1,0,0,0,1,1,1,4,0,32127.7,40432.8,live,missing_source

@@ -1,0 +1,2 @@
+﻿model,retry,n,first_pass_rate,final_pass_rate,success_rate,risky_first_break_rate,modified_rate,unintended_rate,avg_llm_ms,llm_fail_calls
+gpt-5.4-mini,off,20,0.5,0.5,0.5,0.9,1.0,0.1,5909.5,0
