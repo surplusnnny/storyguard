@@ -78,13 +78,18 @@ def run_once(cli: Client) -> list[dict]:
         return ok, f"설명 출처 {ex.get('source') if ex else '-'}, 수정안 {len(ex.get('fixes', [])) if ex else 0}개"
 
     def s4():
+        # 사용자가 수정안을 하나씩 눌러 보는 것처럼, 통과하는 수정안이 나올 때까지 순서대로 시험한다.
         r0 = ctx["res"]
-        fix = r0["explanation"]["fixes"][0]
-        r = cli.post("/api/apply_fix", {"original": ctx["game"], "request": DEMO, "failed_game": r0["final_game"],
-                                         "fix": fix, "intent_paths": r0["intent_paths"], "declared": r0["declared"]})
-        ctx["fixed"] = r
-        intent = r["attempts"][0].get("intent", {})
-        return r["status"] == "passed" and intent.get("kept", False), f"'{fix['title']}' 적용 → {r['status']}, 요청 유지 {intent.get('kept')}"
+        rejected = []
+        for fix in r0["explanation"]["fixes"]:
+            r = cli.post("/api/apply_fix", {"original": ctx["game"], "request": DEMO, "failed_game": r0["final_game"],
+                                             "fix": fix, "intent_paths": r0["intent_paths"], "declared": r0["declared"]})
+            intent = r["attempts"][0].get("intent", {})
+            if r["status"] == "passed" and intent.get("kept", False):
+                ctx["fixed"] = r
+                return True, f"'{fix['title']}' 적용 → passed (요청 유지 True), 앞서 거절된 수정안 {len(rejected)}개"
+            rejected.append(fix["title"])
+        return False, "통과하는 수정안이 없음. 거절된 수정안: " + " / ".join(rejected)
 
     def s5():
         g = ctx["fixed"]["final_game"]
