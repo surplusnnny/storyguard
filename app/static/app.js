@@ -2,11 +2,18 @@
 const $ = (id) => document.getElementById(id);
 const S = { original: null, base: null, playGame: null, playState: null, last: null, request: "" };
 
-const PRESETS = [
-  "두 번째 퀘스트 보상을 황금 열쇠에서 마법 지팡이로 바꿔 줘",
-  "촌장의 대화를 '어서 오게, 용사여'로 바꿔 줘",
-  "대장장이의 부탁을 완료하면 방패도 함께 주게 해 줘",
-];
+const PRESETS_BY_GAME = {
+  sample_game: [
+    "두 번째 퀘스트 보상을 황금 열쇠에서 마법 지팡이로 바꿔 줘",
+    "촌장의 대화를 '어서 오게, 용사여'로 바꿔 줘",
+    "대장장이의 부탁을 완료하면 방패도 함께 주게 해 줘",
+  ],
+  lighthouse_game: [
+    "엔지니어의 부탁 보상을 황동 톱니에서 푸른 유리로 바꿔 줘",
+    "엔지니어의 대화를 '어서 와요, 항해사님'으로 바꿔 줘",
+  ],
+};
+const GAME_LABEL = { sample_game: "잃어버린 왕관", lighthouse_game: "등대의 불빛" };
 const SRC = { live: "실시간", mock: "모의 응답", replay: "저장된 결과", template: "규칙 설명" };
 const ERR = {
   timeout: "응답 시간 초과", server_error: "AI 서버 오류", rate_limited: "요청이 몰려 거절됨(429)",
@@ -46,12 +53,6 @@ function loadAssets() {
 
 async function init() {
   loadAssets();
-  PRESETS.forEach((p) => {
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "preset"; b.textContent = p;
-    b.onclick = () => { $("reqText").value = p; $("reqText").focus(); };
-    $("presets").appendChild(b);
-  });
   const st = await api("/api/status");
   const badge = $("modeBadge");
   badge.className = "badge " + st.mode;
@@ -67,12 +68,39 @@ async function init() {
     el.textContent = h.ok ? `연결됨: ${st.models.join(", ")}` : h.message;
     el.classList.toggle("bad", !h.ok);
   }).catch(() => {});
-  const g = await api("/api/game/sample_game");
-  S.original = g.game; S.base = g.game;
+  await setupGames();
+}
+
+// ------------------------------------------------------------ 게임 고르기
+function renderPresets(name) {
+  const box = $("presets"); box.innerHTML = "";
+  const list = PRESETS_BY_GAME[name] || [];
+  list.forEach((p) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "preset"; b.textContent = p;
+    b.onclick = () => { $("reqText").value = p; $("reqText").focus(); };
+    box.appendChild(b);
+  });
+  $("reqText").placeholder = list.length ? "예: " + list[0] : "바꾸고 싶은 점을 적어 주세요";
+}
+
+async function loadGame(name) {
+  const g = await api("/api/game/" + encodeURIComponent(name));
+  S.original = g.game; S.base = g.game; S.last = null; S.request = "";
   $("gameTitle").textContent = g.game.meta?.title || "게임";
+  renderPresets(name);
+  $("result").innerHTML = `<p class="empty">수정 요청을 보내면 결과가 여기에 나옵니다.</p>`;
   renderMap(g.graph, g.verify, false);
   renderVerdict(g.verify, "원본 게임");
   startPlay(g.game, "원본 게임으로 플레이 중");
+}
+
+async function setupGames() {
+  const names = (await api("/api/games")).filter((n) => n !== "edited_game");
+  const sel = $("gameSelect");
+  sel.innerHTML = names.map((n) => `<option value="${esc(n)}">${esc(GAME_LABEL[n] || n)}</option>`).join("");
+  sel.onchange = () => loadGame(sel.value).catch((e) => alert(e.message));
+  await loadGame(names.includes("sample_game") ? "sample_game" : names[0]);
 }
 
 // ------------------------------------------------------------ 판정 문구
@@ -177,6 +205,10 @@ const SCENE = {
   forest: { sky: "#8cc7f0", ground: "#4f9a47", deco: "tree" },
   cave: { sky: "#3a3550", ground: "#5a5268", deco: "rock" },
   final_dungeon: { sky: "#2a2140", ground: "#4b3b6b", deco: "brick" },
+  harbor: { sky: "#a9d6f5", ground: "#6aa6a0", deco: "house" },
+  mist_forest: { sky: "#b9c9d6", ground: "#4f8a5a", deco: "tree" },
+  workshop: { sky: "#3a3550", ground: "#6a5a48", deco: "rock" },
+  lighthouse: { sky: "#2a3552", ground: "#5a6a7a", deco: "brick" },
 };
 function drawScene(areaId, npcs) {
   const c = $("scene"), x = c.getContext("2d");

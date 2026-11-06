@@ -1,0 +1,153 @@
+{
+  "meta": {
+    "title": "등대의 불빛",
+    "version": 1,
+    "description": "안개 낀 항구 마을에서 꺼진 등대의 불을 다시 밝히는 짧은 스토리 게임"
+  },
+  "start": {
+    "area": "harbor",
+    "items": [],
+    "flags": []
+  },
+  "items": [
+    {
+      "id": "brass_gear",
+      "name": "황동 톱니",
+      "description": "등대 장치의 부러진 톱니를 대신할 부품"
+    },
+    {
+      "id": "blue_glass",
+      "name": "푸른 유리",
+      "description": "등대 불빛을 멀리 보내는 렌즈 조각"
+    },
+    {
+      "id": "lighthouse_key",
+      "name": "등대 열쇠",
+      "description": "등대 문을 여는 열쇠"
+    }
+  ],
+  "areas": [
+    {
+      "id": "harbor",
+      "name": "항구",
+      "connections": [
+        "mist_forest"
+      ],
+      "requires_items": [],
+      "requires_flags": []
+    },
+    {
+      "id": "mist_forest",
+      "name": "안개 숲",
+      "connections": [
+        "harbor",
+        "workshop",
+        "lighthouse"
+      ],
+      "requires_items": [],
+      "requires_flags": []
+    },
+    {
+      "id": "workshop",
+      "name": "지하 작업실",
+      "connections": [
+        "mist_forest"
+      ],
+      "requires_items": [],
+      "requires_flags": []
+    },
+    {
+      "id": "lighthouse",
+      "name": "등대",
+      "connections": [
+        "mist_forest"
+      ],
+      "requires_items": [
+        "lighthouse_key"
+      ],
+      "requires_flags": []
+    }
+  ],
+  "npcs": [
+    {
+      "id": "engineer",
+      "name": "엔지니어",
+      "area": "harbor",
+      "dialogue": [
+        "등대 장치를 고치려면 황동 톱니가 필요해요. 안개 숲에서 찾아 주세요."
+      ]
+    },
+    {
+      "id": "keeper",
+      "name": "등대지기",
+      "area": "mist_forest",
+      "dialogue": [
+        "톱니가 있으면 지하 작업실에서 열쇠를 만들 수 있을 거야."
+      ]
+    }
+  ],
+  "quests": [
+    {
+      "id": "q1",
+      "name": "안개 숲의 톱니",
+      "giver": "engineer",
+      "requires_quests": [],
+      "complete_area": "mist_forest",
+      "requires_items": [],
+      "consumes_items": [],
+      "reward_items": [
+        "brass_gear"
+      ],
+      "reward_flags": []
+    }
+  ],
+  "events": [
+    {
+      "id": "make_key",
+      "name": "작업실에서 열쇠 만들기",
+      "area": "workshop",
+      "requires_items": [
+        "brass_gear"
+      ],
+      "requires_flags": [],
+      "requires_quests": [],
+      "gives_items": [
+        "lighthouse_key"
+      ],
+      "sets_flags": []
+    },
+    {
+      "id": "find_glass",
+      "name": "푸른 유리 줍기",
+      "area": "workshop",
+      "requires_items": [],
+      "requires_flags": [],
+      "requires_quests": [],
+      "gives_items": [
+        "blue_glass"
+      ],
+      "sets_flags": []
+    },
+    {
+      "id": "light_beacon",
+      "name": "등대의 불 밝히기",
+      "area": "lighthouse",
+      "requires_items": [
+        "blue_glass"
+      ],
+      "requires_flags": [],
+      "requires_quests": [],
+      "gives_items": [],
+      "sets_flags": [
+        "beacon_lit"
+      ]
+    }
+  ],
+  "ending": {
+    "name": "등대의 불을 밝히다",
+    "requires_items": [],
+    "requires_flags": [
+      "beacon_lit"
+    ]
+  }
+}
