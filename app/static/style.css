@@ -209,3 +209,13 @@ details.path ol { padding-left: 24px; margin: 6px 0 0; max-height: 240px; overfl
   .game-title { justify-self: start; }
   .layout { grid-template-columns: 1fr; padding: 16px; }
 }
+.changes { margin: 4px 0 8px 18px; padding: 0; font-size: 14px; color: var(--ink-soft); }
+.changes li { margin: 2px 0; }
+.brand { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; }
+.brand p { flex-basis: 100%; }
+.logo { width: 44px; height: 44px; image-rendering: pixelated; }
+body.has-bg {
+  background-image: linear-gradient(rgba(220, 235, 250, 0.6), rgba(220, 235, 250, 0.6)), var(--bg-url);
+  background-size: cover; background-attachment: fixed; image-rendering: pixelated;
+}
+.credits { margin: 16px; text-align: center; font-size: 13px; color: var(--ink-soft); }

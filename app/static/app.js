@@ -24,7 +24,27 @@ async function api(path, body) {
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // ------------------------------------------------------------ 시작
+// 틸론 GPU에서 만든 이미지(app/static/assets). 파일이 없으면 아무것도 바꾸지 않는다.
+function loadAssets() {
+  const logo = $("logo");
+  logo.onload = () => { logo.hidden = false; };
+  logo.src = "/static/assets/logo_256.png";
+  const bg = new Image();
+  bg.onload = () => {
+    document.documentElement.style.setProperty("--bg-url", "url('/static/assets/background.webp')");
+    document.body.classList.add("has-bg");
+  };
+  bg.src = "/static/assets/background.webp";
+  fetch("/static/assets/credits.json").then((r) => (r.ok ? r.json() : null)).then((c) => {
+    if (!c || !c.gpu || !c.model) return;
+    const el = $("credits");
+    el.textContent = `로고·배경 이미지: 교내 GPU(${c.gpu})에서 오픈소스 모델 ${c.model}로 생성`;
+    el.hidden = false;
+  }).catch(() => {});
+}
+
 async function init() {
+  loadAssets();
   PRESETS.forEach((p) => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "preset"; b.textContent = p;
@@ -55,16 +75,28 @@ async function init() {
 }
 
 // ------------------------------------------------------------ 판정 문구
+// 거절 이유를 한 줄로. 엔딩에 못 가는 이유가 없고 요청 밖 변경만 있으면 무엇이 바뀌었는지 보여 준다.
+function whyRejected(v) {
+  const b = (v.blockers || [])[0]?.message;
+  if (b) return b;
+  const un = v.unintended_changes || [];
+  if (un.length) return "요청하지 않은 변경: " + describeChanges(un, S.original).join(" / ");
+  if ((v.schema_errors || []).length) return "게임 데이터 형식 오류";
+  return "검증 실패";
+}
+
 function renderVerdict(v, label) {
   const el = $("verdict");
   if (!v) { el.className = "verdict"; el.textContent = ""; return; }
   const ok = v.reachable && !(v.unintended_changes || []).length && !(v.schema_errors || []).length;
   el.className = "verdict " + (ok ? "ok" : "bad");
   const steps = (v.path || []).length;
-  const why = (v.blockers || [])[0]?.message || ((v.unintended_changes || []).length ? "요청하지 않은 변경이 있습니다." : "");
+  const unint = v.unintended_changes || [];
   el.innerHTML = ok
     ? `${esc(label)}: 엔딩까지 갈 수 있습니다<small>검증 엔진이 ${steps}단계 만에 엔딩에 도달하는 경로를 찾았습니다.</small>`
-    : `${esc(label)}: 엔딩에 갈 수 없습니다<small>${esc(why)}</small>`;
+    : (v.reachable && unint.length)
+      ? `${esc(label)}: 엔딩에는 갈 수 있지만 요청하지 않은 변경이 있어 거절했습니다<small>${esc(describeChanges(unint, S.original).join(" / "))}</small>`
+      : `${esc(label)}: 엔딩에 갈 수 없습니다<small>${esc(whyRejected(v))}</small>`;
 }
 
 // ------------------------------------------------------------ 스토리 지도 (SVG)
@@ -234,7 +266,11 @@ function showResult(res) {
     head = `<div class="res-status ok">${retried ? "고쳐서 통과했습니다" : "통과: 엔딩까지 갈 수 있습니다"}</div>`;
     if (retried) head += `<p>처음 수정은 엔딩을 막았고, ${res.attempts.length - 1}번 다시 고쳐서 통과했습니다. 요청한 변경은 그대로 남아 있습니다.</p>`;
   } else if (res.status === "failed") {
-    head = `<div class="res-status bad">엔딩에 갈 수 없습니다</div>`;
+    const un = res.verify?.unintended_changes || [];
+    head = (res.verify?.reachable && un.length)
+      ? `<div class="res-status bad">엔딩에는 갈 수 있지만 요청하지 않은 변경이 있어 거절했습니다</div>
+         <ul class="changes">${describeChanges(un, S.original).map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`
+      : `<div class="res-status bad">엔딩에 갈 수 없습니다</div>`;
   } else if (res.status === "question") {
     head = `<div class="res-status warn">확인이 필요합니다</div><p>${esc(res.question)}</p>`;
   } else {
@@ -253,7 +289,7 @@ function showResult(res) {
   }
   body += `<ol class="timeline">` + res.attempts.map((a, i) => {
     const pass = a.passed, label = a.kind === "modify" ? "1차 수정" : `다시 고치기 ${i}`;
-    const why = a.verify ? (pass ? "엔딩 도달 확인" : (a.verify.blockers[0]?.message || "요청하지 않은 변경이 있음")) : (a.note || "");
+    const why = a.verify ? (pass ? "엔딩 도달 확인" : whyRejected(a.verify)) : (a.note || "");
     const meta = a.llm.ok ? `${esc(a.llm.model)} ${a.llm.latency_ms}ms` : esc(ERR[a.llm.error_kind] || a.llm.error_kind);
     return `<li class="${pass ? "pass" : "fail"}"><b>${label}</b> ${srcBadge(a.llm.source)}<br>${esc(why)}<span class="meta">${meta}${a.note && a.verify ? "<br>" + esc(a.note) : ""}</span></li>`;
   }).join("") + `</ol>`;
