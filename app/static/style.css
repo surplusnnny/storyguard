@@ -209,3 +209,5 @@ details.path ol { padding-left: 24px; margin: 6px 0 0; max-height: 240px; overfl
   .game-title { justify-self: start; }
   .layout { grid-template-columns: 1fr; padding: 16px; }
 }
+.changes { margin: 4px 0 8px 18px; padding: 0; font-size: 14px; color: var(--ink-soft); }
+.changes li { margin: 2px 0; }
