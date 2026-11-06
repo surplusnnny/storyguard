@@ -36,9 +36,10 @@ function loadAssets() {
   };
   bg.src = "/static/assets/background.webp";
   fetch("/static/assets/credits.json").then((r) => (r.ok ? r.json() : null)).then((c) => {
-    if (!c || !c.gpu || !c.model) return;
+    if (!c || !c.model) return;
     const el = $("credits");
-    el.textContent = `로고·배경 이미지: 교내 GPU(${c.gpu})에서 오픈소스 모델 ${c.model}로 생성`;
+    // GPU 이름이 기록돼 있을 때만 이름을 붙이고, 없으면 지어내지 않는다
+    el.textContent = `로고·배경 이미지: 교내 GPU(${c.gpu || "틸론"})에서 오픈소스 모델 ${c.model}로 생성`;
     el.hidden = false;
   }).catch(() => {});
 }

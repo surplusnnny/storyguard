@@ -72,7 +72,9 @@ def status():
 def health():
     """GPU 서버 연결 확인(화면 상단 배지용). live 모드가 아니면 확인하지 않는다."""
     if config.mode() != "live":
-        return {"ok": None, "message": f"{config.mode()} 모드라 AI 서버를 확인하지 않음"}
+        why = {"replay": "저장된 결과를 보여 주는 중이라", "replay_first": "저장된 결과를 먼저 쓰는 중이라",
+               "mock": "모의 모드라"}.get(config.mode(), f"{config.mode()} 모드라")
+        return {"ok": None, "message": f"{why} AI 서버를 확인하지 않음"}
     target = "Claude API" if config.provider() == "anthropic" else "GPU 서버"
     try:
         ids = llm_client.list_models()
