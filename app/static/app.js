@@ -24,7 +24,27 @@ async function api(path, body) {
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // ------------------------------------------------------------ 시작
+// 틸론 GPU에서 만든 이미지(app/static/assets). 파일이 없으면 아무것도 바꾸지 않는다.
+function loadAssets() {
+  const logo = $("logo");
+  logo.onload = () => { logo.hidden = false; };
+  logo.src = "/static/assets/logo_256.png";
+  const bg = new Image();
+  bg.onload = () => {
+    document.documentElement.style.setProperty("--bg-url", "url('/static/assets/background.webp')");
+    document.body.classList.add("has-bg");
+  };
+  bg.src = "/static/assets/background.webp";
+  fetch("/static/assets/credits.json").then((r) => (r.ok ? r.json() : null)).then((c) => {
+    if (!c || !c.gpu || !c.model) return;
+    const el = $("credits");
+    el.textContent = `로고·배경 이미지: 교내 GPU(${c.gpu})에서 오픈소스 모델 ${c.model}로 생성`;
+    el.hidden = false;
+  }).catch(() => {});
+}
+
 async function init() {
+  loadAssets();
   PRESETS.forEach((p) => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "preset"; b.textContent = p;
