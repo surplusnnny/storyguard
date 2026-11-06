@@ -1,0 +1,162 @@
+[
+  {
+    "name": "storyguard_emblem",
+    "category": "branding",
+    "file": "storyguard_generated_assets/branding/storyguard_emblem.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "lighthouse_title_art",
+    "category": "branding",
+    "file": "storyguard_generated_assets/branding/lighthouse_title_art.png",
+    "size": [
+      768,
+      432
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "protagonist",
+    "category": "characters",
+    "file": "storyguard_generated_assets/characters/protagonist.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "engineer",
+    "category": "characters",
+    "file": "storyguard_generated_assets/characters/engineer.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "archivist",
+    "category": "characters",
+    "file": "storyguard_generated_assets/characters/archivist.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "lighthouse_keeper",
+    "category": "characters",
+    "file": "storyguard_generated_assets/characters/lighthouse_keeper.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "rusted_gear",
+    "category": "items",
+    "file": "storyguard_generated_assets/items/rusted_gear.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "brass_gear",
+    "category": "items",
+    "file": "storyguard_generated_assets/items/brass_gear.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "keeper_note",
+    "category": "items",
+    "file": "storyguard_generated_assets/items/keeper_note.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "lighthouse_key",
+    "category": "items",
+    "file": "storyguard_generated_assets/items/lighthouse_key.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "blue_glass",
+    "category": "items",
+    "file": "storyguard_generated_assets/items/blue_glass.png",
+    "size": [
+      512,
+      512
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "harbor",
+    "category": "backgrounds",
+    "file": "storyguard_generated_assets/backgrounds/harbor.png",
+    "size": [
+      768,
+      432
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "mist_forest",
+    "category": "backgrounds",
+    "file": "storyguard_generated_assets/backgrounds/mist_forest.png",
+    "size": [
+      768,
+      432
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "underground_workshop",
+    "category": "backgrounds",
+    "file": "storyguard_generated_assets/backgrounds/underground_workshop.png",
+    "size": [
+      768,
+      432
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "lighthouse_control_room",
+    "category": "backgrounds",
+    "file": "storyguard_generated_assets/backgrounds/lighthouse_control_room.png",
+    "size": [
+      768,
+      432
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  },
+  {
+    "name": "beacon_ending",
+    "category": "ending",
+    "file": "storyguard_generated_assets/ending/beacon_ending.png",
+    "size": [
+      768,
+      432
+    ],
+    "model": "stabilityai/sdxl-turbo"
+  }
+]
